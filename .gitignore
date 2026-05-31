@@ -1,0 +1,11 @@
+node_modules/
+.claude/
+dist/
+*.tsbuildinfo
+.larb/
+!.larb/config.example.toml
+.env
+.env.*
+*.log
+.DS_Store
+coverage/

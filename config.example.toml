@@ -1,0 +1,32 @@
+# Larb configuration (declarative, NON-executable).
+#
+# Two locations are read:
+#   ~/.larb/config.toml          fully trusted (yours)
+#   <project>/.larb/config.toml  PROPOSALS ONLY — repo config can suggest models
+#                                and verification commands and can only *lower*
+#                                spend limits. It can never set baseURL, choose
+#                                the key env var, add allow-rules, or run code.
+
+[provider]
+kind = "anthropic"
+apiKeyEnv = "ANTHROPIC_API_KEY"   # the key is read from the env, never stored here
+# baseURL = "https://api.anthropic.com"   # global config only
+
+[provider.models]
+orchestrator = "claude-opus-4-8"
+worker = "claude-haiku-4-5-20251001"
+
+[limits]
+perRun = 2.0       # USD — hard stop for one `run`
+perSession = 10.0  # USD — hard stop for the process
+perDay = 25.0      # USD — hard stop per calendar day
+
+# Verification commands run after edits. Each runs in the sandbox under exec
+# permission. A `run` is not "done" until these pass.
+verify = ["pnpm -s typecheck", "pnpm -s test"]
+
+maxIterations = 30
+
+# Optional global-only policy (ignored from project config):
+# [policy]
+# deny = [{ capability = "net", host = "example.com" }]

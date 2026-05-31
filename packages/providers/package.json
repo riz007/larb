@@ -1,0 +1,13 @@
+{
+  "name": "@larb/providers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@larb/governors": "workspace:*"
+  }
+}

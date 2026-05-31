@@ -1,0 +1,24 @@
+{
+  "name": "@larb/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "larb": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@larb/context": "workspace:*",
+    "@larb/core": "workspace:*",
+    "@larb/governors": "workspace:*",
+    "@larb/providers": "workspace:*",
+    "@larb/sandbox": "workspace:*",
+    "ink": "^5.1.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18"
+  }
+}
