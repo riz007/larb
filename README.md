@@ -1,5 +1,7 @@
 # Larb
 
+![Larb Code banner](./assets/larb-code.png)
+
 > Open-source, model-agnostic, security-first autonomous coding agent.
 
 Larb is a terminal-native autonomous engineer you can point at any model,
