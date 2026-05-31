@@ -3,6 +3,34 @@
   "version": "0.0.0",
   "private": true,
   "description": "Larb — open-source, model-agnostic, security-first autonomous coding agent",
+  "keywords": [
+    "coding-agent",
+    "ai-agent",
+    "autonomous-agent",
+    "agentic",
+    "llm",
+    "cli",
+    "tui",
+    "developer-tools",
+    "code-generation",
+    "model-agnostic",
+    "anthropic",
+    "openai",
+    "ollama",
+    "sandbox",
+    "security",
+    "typescript",
+    "nodejs",
+    "open-source"
+  ],
+  "homepage": "https://github.com/riz007/larb-code#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/riz007/larb-code.git"
+  },
+  "bugs": {
+    "url": "https://github.com/riz007/larb-code/issues"
+  },
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
@@ -21,6 +49,8 @@
     "vitest": "^2.1.8"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
