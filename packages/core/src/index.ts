@@ -6,5 +6,5 @@ export {
   type RunResult,
   type OrchestratorCallbacks,
 } from "./agent.js";
-export { ToolRegistry, readOnlyTools, fullTools } from "./tools/registry.js";
+export { ToolRegistry, readOnlyTools, fullTools, orchestratorTools } from "./tools/registry.js";
 export type { Tool, ToolContext, ToolResult } from "./tools/types.js";

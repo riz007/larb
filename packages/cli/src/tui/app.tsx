@@ -134,6 +134,7 @@ function App({ mode, task, projectRoot }: AppProps): JSX.Element {
     onVerify: (command, ok) => addEntry(ok ? "verify-ok" : "verify-err", `  verify ${ok ? "✓" : "✗"} ${command}`),
     onCost: (usd) => setSessionUsd(usd),
     onDiff: (path, diff) => addEntry("diff", `diff — ${path}\n${diff}`),
+    onNote: (note) => addEntry("note", note),
   };
 
   async function drive(): Promise<void> {

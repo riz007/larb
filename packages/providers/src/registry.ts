@@ -1,7 +1,9 @@
 import { AnthropicProvider } from "./anthropic.js";
+import { OpenAIProvider } from "./openai.js";
+import { OllamaProvider } from "./ollama.js";
 import type { ModelProvider } from "./types.js";
 
-export type ProviderKind = "anthropic";
+export type ProviderKind = "anthropic" | "openai" | "ollama";
 
 export type AgentRole = "orchestrator" | "worker";
 
@@ -32,6 +34,8 @@ export const DEFAULT_PROVIDER_CONFIG: ProviderConfig = {
 
 const DEFAULT_KEY_ENV: Record<ProviderKind, string> = {
   anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  ollama: "", // local: no key required
 };
 
 export class MissingApiKeyError extends Error {
@@ -53,14 +57,23 @@ export class ProviderRouter {
   readonly provider: ModelProvider;
 
   constructor(private readonly config: ProviderConfig) {
-    const envName = config.apiKeyEnv ?? DEFAULT_KEY_ENV[config.kind];
-    const apiKey = process.env[envName];
-    if (!apiKey) throw new MissingApiKeyError(envName);
-
     switch (config.kind) {
       case "anthropic":
         this.provider = new AnthropicProvider({
-          apiKey,
+          apiKey: requireKey(config),
+          defaultModel: config.models.orchestrator,
+          baseURL: config.baseURL,
+        });
+        break;
+      case "openai":
+        this.provider = new OpenAIProvider({
+          apiKey: requireKey(config),
+          defaultModel: config.models.orchestrator,
+          baseURL: config.baseURL,
+        });
+        break;
+      case "ollama":
+        this.provider = new OllamaProvider({
           defaultModel: config.models.orchestrator,
           baseURL: config.baseURL,
         });
@@ -74,4 +87,12 @@ export class ProviderRouter {
     }
     return this.config.models.orchestrator;
   }
+}
+
+/** Read the provider's API key from the environment (the secrets-broker boundary). */
+function requireKey(config: ProviderConfig): string {
+  const envName = config.apiKeyEnv ?? DEFAULT_KEY_ENV[config.kind];
+  const apiKey = process.env[envName];
+  if (!apiKey) throw new MissingApiKeyError(envName);
+  return apiKey;
 }

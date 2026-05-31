@@ -1,5 +1,5 @@
 {
-  "name": "@larb/context",
+  "name": "@larb/skills",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@larb/governors": "workspace:*",
-    "@larb/providers": "workspace:*"
+    "@larb/sandbox": "workspace:*",
+    "zod": "^3.24.1"
   }
 }

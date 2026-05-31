@@ -5,6 +5,7 @@ import type {
   ContentBlock,
 } from "@larb/providers";
 import { PermissionDeniedError, type AuditLog, type CostGovernor } from "@larb/governors";
+import { type Compactor, guardUntrusted } from "@larb/context";
 import type { LarbConfig } from "./config.js";
 import type { ToolContext } from "./tools/types.js";
 import { ToolRegistry } from "./tools/registry.js";
@@ -22,6 +23,8 @@ export interface OrchestratorCallbacks {
   onVerify?: (command: string, ok: boolean) => void;
   /** Per-iteration cost snapshot note. */
   onCost?: (sessionUsd: number) => void;
+  /** Informational note (e.g. context compaction, delegation). */
+  onNote?: (note: string) => void;
 }
 
 export interface RunOptions {
@@ -36,6 +39,8 @@ export interface RunOptions {
   config: LarbConfig;
   repoMap: string;
   memory: string;
+  /** Optional proactive context compaction for long sessions. */
+  compactor?: Compactor;
   callbacks?: OrchestratorCallbacks;
 }
 
@@ -57,7 +62,7 @@ const MAX_VERIFY_ATTEMPTS = 3;
 export class Orchestrator {
   async run(opts: RunOptions): Promise<RunResult> {
     const { provider, model, registry, toolContext, cost, audit, config, callbacks } = opts;
-    const messages: Message[] = [
+    let messages: Message[] = [
       { role: "user", content: [{ type: "text", text: opts.task }] },
     ];
     const system = buildSystemPrompt(opts);
@@ -69,6 +74,26 @@ export class Orchestrator {
     let finalText = "";
 
     for (let iteration = 1; iteration <= config.maxIterations; iteration++) {
+      // Proactively compact long sessions before they overflow the window.
+      if (opts.compactor) {
+        const c = await opts.compactor.maybeCompact(system, messages);
+        if (c.compacted) {
+          messages = c.messages;
+          if (c.usage && typeof c.costUsd === "number") {
+            cost.record(c.usage, c.costUsd);
+            audit.log({
+              type: "model_call",
+              provider: provider.name,
+              model: "compaction",
+              usage: c.usage,
+              costUsd: c.costUsd,
+              durationMs: 0,
+            });
+          }
+          if (c.note) callbacks?.onNote?.(c.note);
+        }
+      }
+
       const result = await this.callModel(provider, { system, messages, tools, model }, opts);
 
       cost.record(result.usage, result.costUsd);
@@ -148,7 +173,16 @@ export class Orchestrator {
         }
         audit.log({ type: "tool_call", tool: call.name, input, ok, summary });
         callbacks?.onToolResult?.(summary, ok);
-        toolResults.push({ type: "tool_result", toolUseId: call.id, content, isError: !ok });
+        // Guard untrusted tool output against injected instructions before it
+        // re-enters the model context.
+        const guarded = guardUntrusted(content);
+        if (guarded.flagged) callbacks?.onNote?.(`Flagged possible prompt injection in ${call.name} output.`);
+        toolResults.push({
+          type: "tool_result",
+          toolUseId: call.id,
+          content: guarded.text,
+          isError: !ok,
+        });
       }
       messages.push({ role: "user", content: toolResults });
     }
@@ -225,6 +259,11 @@ function buildSystemPrompt(opts: RunOptions): string {
     "- Be surgical: prefer minimal, well-scoped diffs that match surrounding code.",
     "- Be honest: if you cannot complete the task or a check fails, say so plainly.",
     "- Respect permissions: if a tool is denied, adapt rather than retry blindly.",
+    opts.registry.get("delegate")
+      ? "- Delegate wisely: for large or parallelizable subtasks, call `delegate` " +
+        "with a complete, self-contained instruction to hand work to a cheaper " +
+        "worker agent. Keep planning and final synthesis yourself."
+      : "",
     "",
     "Repo map (structural index):",
     repoMap || "(empty)",

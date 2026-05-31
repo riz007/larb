@@ -8,13 +8,18 @@
 #                                the key env var, add allow-rules, or run code.
 
 [provider]
-kind = "anthropic"
+kind = "anthropic"                # "anthropic" | "openai" | "ollama"
 apiKeyEnv = "ANTHROPIC_API_KEY"   # the key is read from the env, never stored here
-# baseURL = "https://api.anthropic.com"   # global config only
+# baseURL = "https://api.anthropic.com"   # global config only; also serves
+                                          # OpenAI-/Anthropic-compatible endpoints
 
+# Routing policy: the strong model orchestrates; the cheap/fast worker model is
+# used for delegated subtasks and context compaction.
 [provider.models]
 orchestrator = "claude-opus-4-8"
 worker = "claude-haiku-4-5-20251001"
+# For OpenAI:  orchestrator = "gpt-4o", worker = "gpt-4o-mini"
+# For Ollama (local, no key, no spend):  orchestrator = "llama3.1"
 
 [limits]
 perRun = 2.0       # USD — hard stop for one `run`

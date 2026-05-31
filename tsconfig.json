@@ -7,6 +7,8 @@
       "@larb/providers": ["./packages/providers/src/index.ts"],
       "@larb/sandbox": ["./packages/sandbox/src/index.ts"],
       "@larb/context": ["./packages/context/src/index.ts"],
+      "@larb/skills": ["./packages/skills/src/index.ts"],
+      "@larb/skills-sdk": ["./packages/skills-sdk/src/index.ts"],
       "@larb/core": ["./packages/core/src/index.ts"]
     }
   },

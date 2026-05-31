@@ -2,6 +2,7 @@
 import { runInteractive } from "./tui/app.js";
 import { auditCommand } from "./commands/audit.js";
 import { trustCommand } from "./commands/trust.js";
+import { skillCommand } from "./commands/skill.js";
 
 const VERSION = "0.1.0";
 
@@ -12,6 +13,7 @@ Usage:
   larb run <task>         Autonomously complete a task (prompts for writes/exec)
   larb trust [flags]      Show or set trust for this directory
                           flags: --full | --read-only | --revoke
+  larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
   larb audit              Show the audit log + cost summary for this project
   larb help               Show this help
   larb version            Show version
@@ -39,6 +41,8 @@ function main(): void {
     }
     case "trust":
       return trustCommand(cwd, rest);
+    case "skill":
+      return skillCommand(cwd, rest);
     case "audit":
       return auditCommand(cwd);
     case "version":

@@ -21,6 +21,12 @@ export interface ToolContext {
   onDiff?: (path: string, diff: string) => void;
   /** UI hook: surface streamed informational notes. */
   onNote?: (note: string) => void;
+  /**
+   * Hand a scoped subtask to a cheaper worker agent (multi-agent mode).
+   * Injected by the orchestrator wiring; absent inside a subagent to bound
+   * recursion. Shares the cost governor and permission engine.
+   */
+  delegate?: (subtask: string) => Promise<{ ok: boolean; summary: string; content: string }>;
 }
 
 export interface Tool {
