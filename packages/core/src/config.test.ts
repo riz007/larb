@@ -51,6 +51,6 @@ describe("loadConfig — repo config is proposals only", () => {
     );
     const config = loadConfig(project);
     expect(config.verify).toEqual(["echo hi"]);
-    expect(config.provider.models.orchestrator).toBe("claude-sonnet-4-6");
+    expect(config.provider.models?.orchestrator).toBe("claude-sonnet-4-6");
   });
 });

@@ -4,10 +4,19 @@ export { OpenAIProvider, type OpenAIProviderOptions } from "./openai.js";
 export { OllamaProvider, type OllamaProviderOptions } from "./ollama.js";
 export { priceFor, estimateCost, type ModelPrice } from "./pricing.js";
 export {
+  PROVIDER_PRESETS,
+  isKnownProvider,
+  listProviders,
+  type ProviderPreset,
+  type PriceEntry,
+  type Transport,
+  type ProviderKind,
+} from "./presets.js";
+export {
   ProviderRouter,
   MissingApiKeyError,
+  UnknownProviderError,
   DEFAULT_PROVIDER_CONFIG,
   type ProviderConfig,
-  type ProviderKind,
   type AgentRole,
 } from "./registry.js";

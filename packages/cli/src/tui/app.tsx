@@ -56,6 +56,7 @@ function App({ mode, task, projectRoot }: AppProps): JSX.Element {
   const [streamText, setStreamText] = useState("");
   const [sessionUsd, setSessionUsd] = useState(0);
   const [limitUsd, setLimitUsd] = useState(0);
+  const [providerLine, setProviderLine] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [done, setDone] = useState(false);
 
@@ -176,6 +177,13 @@ function App({ mode, task, projectRoot }: AppProps): JSX.Element {
       }
       setLimitUsd(session.cost.snapshot().limits.perSession);
 
+      const { label, orchestrator, worker } = session.provider;
+      setProviderLine(
+        orchestrator === worker
+          ? `${label} · ${orchestrator}`
+          : `${label} · ${orchestrator} / ${worker}`,
+      );
+
       const result = await session.run(task);
       flushStream();
       addEntry(
@@ -226,6 +234,7 @@ function App({ mode, task, projectRoot }: AppProps): JSX.Element {
       {!done ? (
         <Box marginTop={1}>
           <Text dimColor>
+            {providerLine ? `${providerLine}  ·  ` : ""}
             ${sessionUsd.toFixed(4)}
             {limitUsd ? ` / $${limitUsd.toFixed(2)} session limit` : ""}
           </Text>

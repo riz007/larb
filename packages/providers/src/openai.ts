@@ -1,4 +1,5 @@
 import type { TokenUsage } from "@larb/governors";
+import type { PriceEntry } from "./presets.js";
 import type {
   ContentBlock,
   GenerateRequest,
@@ -13,43 +14,38 @@ const DEFAULT_BASE = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-4o";
 const DEFAULT_MAX_TOKENS = 8192;
 
-/** USD per 1M tokens, approximate published list prices. */
-const PRICES: Array<{ match: RegExp; in: number; out: number }> = [
-  { match: /gpt-4o-mini/i, in: 0.15, out: 0.6 },
-  { match: /gpt-4o/i, in: 2.5, out: 10 },
-  { match: /gpt-4\.1-mini/i, in: 0.4, out: 1.6 },
-  { match: /gpt-4\.1/i, in: 2, out: 8 },
-  { match: /o[0-9]/i, in: 15, out: 60 },
-];
-
-function priceFor(model: string): { in: number; out: number } {
-  return PRICES.find((p) => p.match.test(model)) ?? { in: 1, out: 3 };
-}
+/** Used when no model in the price table matches and no table was supplied. */
+const FALLBACK_PRICE = { inputPerM: 1, outputPerM: 3 };
 
 export interface OpenAIProviderOptions {
   apiKey: string;
   defaultModel?: string;
   baseURL?: string;
+  /** Per-provider price table; set by the preset so cost is per-provider. */
+  prices?: PriceEntry[];
 }
 
 /**
  * OpenAI Chat Completions adapter. Implemented over `fetch` (no SDK) so the
  * network surface stays small and auditable. The same adapter serves any
- * OpenAI-compatible endpoint via `baseURL`.
+ * OpenAI-compatible endpoint (DeepSeek, Gemini, Groq, Mistral, xAI, …) via
+ * `baseURL`, with the matching `prices` supplied by the provider preset.
  */
 export class OpenAIProvider implements ModelProvider {
   readonly name = "openai";
   readonly defaultModel: string;
   private readonly baseURL: string;
+  private readonly prices: PriceEntry[];
 
   constructor(private readonly opts: OpenAIProviderOptions) {
     this.defaultModel = opts.defaultModel ?? DEFAULT_MODEL;
     this.baseURL = (opts.baseURL ?? DEFAULT_BASE).replace(/\/$/, "");
+    this.prices = opts.prices ?? [];
   }
 
   estimateCost(usage: TokenUsage, model: string): number {
-    const p = priceFor(model);
-    return (usage.inputTokens / 1e6) * p.in + (usage.outputTokens / 1e6) * p.out;
+    const p = this.prices.find((entry) => entry.match.test(model)) ?? FALLBACK_PRICE;
+    return (usage.inputTokens / 1e6) * p.inputPerM + (usage.outputTokens / 1e6) * p.outputPerM;
   }
 
   async generate(request: GenerateRequest): Promise<GenerateResult> {

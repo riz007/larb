@@ -28,10 +28,19 @@ export interface SessionCallbacks extends OrchestratorCallbacks {
   onNote?: (note: string) => void;
 }
 
+/** A snapshot of the active provider + routing, for display. */
+export interface ProviderInfo {
+  kind: string;
+  label: string;
+  orchestrator: string;
+  worker: string;
+}
+
 export interface Session {
   config: LarbConfig;
   cost: CostGovernor;
   audit: AuditLog;
+  provider: ProviderInfo;
   run(task: string): Promise<RunResult>;
 }
 
@@ -154,6 +163,12 @@ export function buildSession(opts: {
     config,
     cost,
     audit,
+    provider: {
+      kind: router.kind,
+      label: router.label,
+      orchestrator: router.modelFor("orchestrator"),
+      worker: router.modelFor("worker"),
+    },
     run: (task: string) =>
       orchestrator.run({
         task,

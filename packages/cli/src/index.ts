@@ -3,6 +3,7 @@ import { runInteractive } from "./tui/app.js";
 import { auditCommand } from "./commands/audit.js";
 import { trustCommand } from "./commands/trust.js";
 import { skillCommand } from "./commands/skill.js";
+import { providersCommand } from "./commands/providers.js";
 
 const VERSION = "0.1.0";
 
@@ -14,12 +15,14 @@ Usage:
   larb trust [flags]      Show or set trust for this directory
                           flags: --full | --read-only | --revoke
   larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
+  larb providers [name]   List model providers (or show one's details)
   larb audit              Show the audit log + cost summary for this project
   larb help               Show this help
   larb version            Show version
 
 Larb makes ZERO network calls and reads ZERO executable config before you make
-a trust decision for a directory. Set ANTHROPIC_API_KEY to use the agent.
+a trust decision for a directory. Larb is model-agnostic: pick any provider with
+'kind' in ~/.larb/config.toml (run 'larb providers') and set its API key env var.
 `;
 
 function main(): void {
@@ -43,6 +46,8 @@ function main(): void {
       return trustCommand(cwd, rest);
     case "skill":
       return skillCommand(cwd, rest);
+    case "providers":
+      return providersCommand(rest);
     case "audit":
       return auditCommand(cwd);
     case "version":
