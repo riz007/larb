@@ -6,7 +6,7 @@ hero:
   text: "The security-first coding agent"
   tagline: "Open-source, model-agnostic, governed. A terminal-native autonomous engineer you can point at any model, extend with signed skills, and run without rate-limit cliffs or vendor lock-in — safe to open an untrusted repo by default."
   image:
-    src: /larb-code.png
+    src: /larb.png
     alt: Larb
   actions:
     - theme: brand
@@ -51,11 +51,11 @@ The name is also a Lao/Thai dish (ลาบ) — a nod to the project's roots. T
 is bilingual: **[English](/)** · **[ไทย](/th/)**.
 
 > ⚠️ **Status: `0.1.0-alpha`.** Early, BYO-key developers only. APIs and config
-> may change. See the [roadmap](/roadmap) and the README's *Known limitations*.
+> may change. See the [roadmap](/roadmap) and the README's _Known limitations_.
 
 ### The wedge, in one sentence
 
-Everyone else makes you choose between *open*, *safe*, *unlocked*, and *cheap*.
+Everyone else makes you choose between _open_, _safe_, _unlocked_, and _cheap_.
 **Larb refuses that trade-off.** See the [comparison](/comparison) for how it
 stacks up against Claude Code, Codex CLI, Gemini CLI, DeepSeek, Aider, and
 OpenClaw.
