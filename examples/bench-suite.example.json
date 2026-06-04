@@ -1,0 +1,13 @@
+{
+  "$comment": "Example Larb benchmark suite. Run with: larb bench examples/bench-suite.example.json — on a DISPOSABLE checkout (tasks run autonomously with auto-approval). Resolution = the project's verify commands passing.",
+  "tasks": [
+    {
+      "id": "add-version-flag",
+      "task": "Add a --version flag to the CLI that prints the package version, then make sure typecheck and tests pass."
+    },
+    {
+      "id": "fix-typo-readme",
+      "task": "Find and fix any spelling mistakes in README.md."
+    }
+  ]
+}

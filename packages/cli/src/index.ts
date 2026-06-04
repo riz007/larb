@@ -6,6 +6,7 @@ import { skillCommand } from "./commands/skill.js";
 import { providersCommand } from "./commands/providers.js";
 import { bridgeCommand } from "./commands/bridge.js";
 import { runsCommand } from "./commands/runs.js";
+import { benchCommand } from "./commands/bench.js";
 import { RunStateStore } from "@larb/core";
 
 const VERSION = "0.1.0";
@@ -22,6 +23,7 @@ Usage:
   larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
   larb providers [name]   List model providers (or show one's details)
   larb bridge             Drive the agent over a stdio JSON protocol (for editors)
+  larb bench <suite>      Run a task suite; report resolution rate + cost/task
   larb audit              Show the audit log + cost summary for this project
   larb help               Show this help
   larb version            Show version
@@ -70,6 +72,8 @@ function main(): void {
       return providersCommand(rest);
     case "bridge":
       return bridgeCommand(cwd);
+    case "bench":
+      return benchCommand(cwd, rest);
     case "audit":
       return auditCommand(cwd);
     case "version":
