@@ -1,6 +1,6 @@
 {
   "name": "larb-monorepo",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "description": "Larb — open-source, model-agnostic, security-first autonomous coding agent",
   "keywords": [
@@ -23,13 +23,13 @@
     "nodejs",
     "open-source"
   ],
-  "homepage": "https://github.com/riz007/larb-code#readme",
+  "homepage": "https://github.com/riz007/larb#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/riz007/larb-code.git"
+    "url": "git+https://github.com/riz007/larb.git"
   },
   "bugs": {
-    "url": "https://github.com/riz007/larb-code/issues"
+    "url": "https://github.com/riz007/larb/issues"
   },
   "license": "Apache-2.0",
   "type": "module",
@@ -38,6 +38,7 @@
   },
   "scripts": {
     "larb": "tsx packages/cli/src/index.ts",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"

@@ -9,7 +9,7 @@ import { runsCommand } from "./commands/runs.js";
 import { benchCommand } from "./commands/bench.js";
 import { RunStateStore } from "@larb/core";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.0-alpha.1";
 
 const HELP = `Larb — open-source, model-agnostic, security-first coding agent
 
