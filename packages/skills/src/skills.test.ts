@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PermissionEngine } from "@larb/governors";
 import { Sandbox } from "@larb/sandbox";
+import { isRemoteSkillSource, findSkillRoot, installFromUrl } from "./registry.js";
 
 beforeAll(() => {
   process.env.LARB_HOME = mkdtempSync(join(tmpdir(), "larb-home-"));
@@ -89,4 +90,29 @@ describe("broker manifest enforcement (the headline guarantee)", () => {
     expect(result.ok).toBe(true);
     expect(result.content).toContain("declared-data");
   }, 20000);
+});
+
+describe("remote skill install", () => {
+  it("classifies https tarballs and git URLs as remote, local paths as not", () => {
+    expect(isRemoteSkillSource("https://example.com/skill.tar.gz")).toBe(true);
+    expect(isRemoteSkillSource("git+https://github.com/x/y.git")).toBe(true);
+    expect(isRemoteSkillSource("https://github.com/x/y.git")).toBe(true);
+    expect(isRemoteSkillSource("./local/skill")).toBe(false);
+    expect(isRemoteSkillSource("/abs/path")).toBe(false);
+  });
+
+  it("finds skill.json directly or one level down (tarball top folder)", () => {
+    const root = mkdtempSync(join(tmpdir(), "larb-find-"));
+    const nested = join(root, "my-skill-1.0.0");
+    mkdirSync(nested, { recursive: true });
+    writeFileSync(join(nested, "skill.json"), "{}");
+    expect(findSkillRoot(root)).toBe(nested);
+    expect(findSkillRoot(nested)).toBe(nested);
+    const empty = mkdtempSync(join(tmpdir(), "larb-empty-"));
+    expect(findSkillRoot(empty)).toBeUndefined();
+  });
+
+  it("rejects a non-remote source", async () => {
+    await expect(installFromUrl("./local/skill")).rejects.toThrow(/remote skill source/i);
+  });
 });
