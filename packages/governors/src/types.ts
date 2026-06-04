@@ -64,6 +64,10 @@ export type Approver = (request: PermissionRequest) => Promise<Decision>;
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
+  /** Tokens read from the prompt cache (billed at a fraction of input). */
+  cacheReadTokens?: number;
+  /** Tokens written to the prompt cache (billed at a premium over input). */
+  cacheWriteTokens?: number;
 }
 
 export interface SpendLimits {

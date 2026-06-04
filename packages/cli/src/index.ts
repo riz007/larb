@@ -23,7 +23,7 @@ Usage:
   larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
   larb providers [name]   List model providers (or show one's details)
   larb bridge             Drive the agent over a stdio JSON protocol (for editors)
-  larb bench <suite>      Run a task suite; report resolution rate + cost/task
+  larb bench <suite>      Run a task suite (or --swebench <jsonl>); report cost/task
   larb audit              Show the audit log + cost summary for this project
   larb help               Show this help
   larb version            Show version

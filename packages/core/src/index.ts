@@ -19,3 +19,12 @@ export {
   type BenchmarkReport,
   type TaskRunner,
 } from "./bench.js";
+export { Worktree } from "./worktree.js";
+export {
+  parseSweBench,
+  parseInstance,
+  toBenchTask,
+  applyPatch,
+  isResolved,
+  type SweBenchInstance,
+} from "./swebench.js";
