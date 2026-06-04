@@ -40,8 +40,12 @@ fs/exec/net request against both the skill manifest and the permission engine.
 WASM remains a possible future tier; the broker boundary does not change.
 
 ## D6. Network egress — **default-deny, governed via the `net` capability**
-The agent's one network path is the `http_fetch` tool
+The agent's one in-process network path is the `http_fetch` tool
 (`packages/core/src/tools/http.ts`), gated per-host by the `net` capability
 (default-deny, every host approved + audited). Under the container backend, shell
-commands get no network (`--network none`); the `allowlist` mode enables container
-networking with per-host gating expressed through `http_fetch`.
+commands get no network (`--network none`) by default; in `allowlist` mode,
+container egress is routed through a host-side `EgressProxy`
+(`packages/sandbox/src/egress.ts`) that permits only the configured `egressAllow`
+hosts (default-deny), filtering proxy-respecting clients such as package managers
+and curl. Airtight raw-socket blocking is a future microVM/internal-network
+backend behind the same seam.

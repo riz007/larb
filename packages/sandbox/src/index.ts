@@ -12,3 +12,4 @@ export {
 } from "./backend.js";
 export { SpawnBackend } from "./spawn.js";
 export { ContainerBackend, type ContainerOptions } from "./container.js";
+export { EgressProxy, type HostCheck } from "./egress.js";
