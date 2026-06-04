@@ -1,0 +1,67 @@
+/* ── Home hero banner ──────────────────────────────────────────────────────
+ * The banner (public/larb.png) is a wide graphic, not a small logo, so we let
+ * it grow to at least 700px and sit vertically centred beside the hero text.
+ * Below the two-column breakpoint it falls back to full width so phones don't
+ * get a horizontal scrollbar (responsive best practice). */
+
+/* Drop the default blurred glow — it looks odd behind a large rectangular banner. */
+.VPHero .image-bg {
+  display: none;
+}
+
+/* Center the image block within its area and remove the default offset transform. */
+.VPHero .image-container {
+  transform: none;
+  padding: 0;
+}
+
+.VPHero .image-src {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+/* Two-column layout: enlarge the banner and align the row to the middle. */
+@media (min-width: 768px) {
+  .VPHero .container {
+    align-items: center; /* vertical middle: image centred against the text */
+  }
+  .VPHero .image {
+    width: auto;
+  }
+  .VPHero .image-container {
+    width: auto;
+    max-width: none;
+  }
+  .VPHero .image-src {
+    min-width: 700px; /* requested minimum */
+    max-width: min(760px, 46vw);
+  }
+}
+
+/* ── Mermaid diagrams ───────────────────────────────────────────────────────
+ * VitePress shrinks diagram SVGs to fit the content width, which makes dense
+ * ones (the roadmap timeline) unreadable. Render them at natural size and let
+ * the block scroll horizontally instead — the standard UX for wide diagrams. */
+
+.vp-doc .mermaid {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 20px 0;
+  /* Subtle affordance that the block can scroll. */
+  scrollbar-width: thin;
+}
+
+.vp-doc .mermaid svg {
+  max-width: none !important;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Give the widest diagram (timeline) room to breathe so labels never collide. */
+.vp-doc .mermaid svg[aria-roledescription="timeline"] {
+  min-width: 900px;
+}

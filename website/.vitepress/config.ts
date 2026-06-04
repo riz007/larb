@@ -95,6 +95,11 @@ export default withMermaid(
       },
     },
 
-    mermaid: {},
+    // Larger base font so dense diagrams (e.g. the roadmap timeline) stay legible;
+    // CSS lets wide diagrams scroll horizontally instead of shrinking (theme/custom.css).
+    mermaid: {
+      theme: "default",
+      themeVariables: { fontSize: "16px" },
+    },
   }),
 );
