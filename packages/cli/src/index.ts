@@ -4,6 +4,7 @@ import { auditCommand } from "./commands/audit.js";
 import { trustCommand } from "./commands/trust.js";
 import { skillCommand } from "./commands/skill.js";
 import { providersCommand } from "./commands/providers.js";
+import { bridgeCommand } from "./commands/bridge.js";
 
 const VERSION = "0.1.0";
 
@@ -16,6 +17,7 @@ Usage:
                           flags: --full | --read-only | --revoke
   larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
   larb providers [name]   List model providers (or show one's details)
+  larb bridge             Drive the agent over a stdio JSON protocol (for editors)
   larb audit              Show the audit log + cost summary for this project
   larb help               Show this help
   larb version            Show version
@@ -48,6 +50,8 @@ function main(): void {
       return skillCommand(cwd, rest);
     case "providers":
       return providersCommand(rest);
+    case "bridge":
+      return bridgeCommand(cwd);
     case "audit":
       return auditCommand(cwd);
     case "version":
