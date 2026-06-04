@@ -9,6 +9,11 @@ extend with governed skills, and run without rate-limit cliffs or vendor
 lock-in — with a trust model that makes opening an untrusted repo safe by
 default.
 
+> ⚠️ **Status: `0.1.0-alpha` — early, BYO-key developers only.** APIs, config,
+> and the skill format may change without notice. Review a run's actions rather
+> than leaving it fully unattended, and read **[Known limitations](#known-limitations)**
+> before relying on it. Feedback and issues very welcome.
+
 ## What's implemented today
 
 - **Trust-before-anything boot** — no executable config is read and no network
@@ -57,19 +62,29 @@ packages/
 
 ## Quick start
 
+Requires **Node.js ≥ 20** and **pnpm**.
+
 ```bash
 pnpm install
-export ANTHROPIC_API_KEY=sk-ant-...
+pnpm build                 # bundles the CLI to packages/cli/dist/index.js
+export ANTHROPIC_API_KEY=sk-ant-...   # or any provider key (see Providers)
 
-# Ask a question about a repo (read-only)
-pnpm larb ask "What does the orchestrator loop do?"
-
-# Run an autonomous task (prompts for trust + each write/exec)
-pnpm larb run "Add a --version flag to the CLI"
-
-# Inspect the audit log and cost
-pnpm larb audit
+# Run from the repo:
+pnpm larb ask "What does the orchestrator loop do?"   # read-only
+pnpm larb run "Add a --version flag to the CLI"       # prompts for trust + each write/exec
+pnpm larb audit                                        # audit log + cost
 ```
+
+### Install the `larb` command globally
+
+```bash
+pnpm build
+npm link ./packages/cli    # puts `larb` on your PATH (resolves deps from this checkout)
+larb version
+```
+
+A published `npm i -g @larb/cli` is planned but not yet available — use `npm link`
+for now.
 
 See [`config.example.toml`](./config.example.toml) for configuration.
 
@@ -127,8 +142,31 @@ larb providers            # table of all providers + whether each key is set
 larb providers deepseek   # base URL, default models, and config snippet
 ```
 
+## Known limitations
+
+This is an alpha. Be aware of these before relying on it:
+
+- **Sandbox isolation depends on a container runtime.** Real isolation (the
+  "safe to open an untrusted repo" property) needs **docker** or **podman**
+  installed. Without one, Larb falls back to a **reduced-isolation host
+  subprocess** — cwd-scoped with host secrets stripped, but the host filesystem
+  and network are reachable. The active level is printed at the start of every
+  run; verify the container path with [`docs/verify-container.md`](./docs/verify-container.md).
+- **Container egress allow-listing** filters proxy-respecting clients (package
+  managers, curl, fetch); airtight raw-socket blocking awaits a microVM backend.
+- **SWE-bench** ships as a loader + grading primitives; full graded runs need the
+  dataset repos and per-repo test commands ([`docs/swebench.md`](./docs/swebench.md)).
+- **The editor bridge** (`larb bridge`) is a minimal stdio protocol, not yet a
+  packaged editor extension.
+- **`larb bench`** runs tasks autonomously with auto-approval — point it at a
+  disposable checkout only.
+- Prompt caching and streaming are covered by tests against mocked transports;
+  confirm savings/behavior against your live provider.
+
 ## License
 
-Apache-2.0. Contributions require signing the [CLA](./CLA.md). See
-[`SECURITY.md`](./SECURITY.md) for coordinated disclosure and
+Apache-2.0. Contributions require signing the [CLA](./CLA.md). The **"Larb" name
+and logo** are trademarks and are not granted by the code license — see
+[`TRADEMARK.md`](./TRADEMARK.md). See [`SECURITY.md`](./SECURITY.md) for
+coordinated disclosure, [`CHANGELOG.md`](./CHANGELOG.md) for release notes, and
 [`threat-model.md`](./threat-model.md) for the attack classes Larb designs out.
