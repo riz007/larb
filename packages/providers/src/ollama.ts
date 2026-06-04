@@ -8,6 +8,7 @@ import type {
   StopReason,
   StreamEvent,
 } from "./types.js";
+import { readLines, safeJson } from "./stream.js";
 
 const DEFAULT_BASE = "http://localhost:11434";
 const DEFAULT_MODEL = "llama3.1";
@@ -60,13 +61,69 @@ export class OllamaProvider implements ModelProvider {
   }
 
   async *stream(request: GenerateRequest): AsyncIterable<StreamEvent> {
-    const result = await this.generate(request);
-    const text = result.content
-      .filter((b): b is Extract<ContentBlock, { type: "text" }> => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-    if (text) yield { type: "text", text };
-    yield { type: "final", result };
+    const model = request.model ?? this.defaultModel;
+    const res = await fetch(`${this.baseURL}/api/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        messages: toOllamaMessages(request.system, request.messages),
+        tools: request.tools?.map((t) => ({
+          type: "function",
+          function: { name: t.name, description: t.description, parameters: t.inputSchema },
+        })),
+        options: request.temperature != null ? { temperature: request.temperature } : undefined,
+      }),
+    });
+    if (!res.ok) throw new Error(`Ollama error ${res.status}: ${await res.text()}`);
+
+    if (!res.body) {
+      const result = await this.generate(request);
+      const text = textOf(result.content);
+      if (text) yield { type: "text", text };
+      yield { type: "final", result };
+      return;
+    }
+
+    // Ollama streams newline-delimited JSON; the last object has done:true.
+    let textAcc = "";
+    const toolCalls: OllamaResponse["message"]["tool_calls"] = [];
+    let usage = { inputTokens: 0, outputTokens: 0 };
+
+    for await (const line of readLines(res.body)) {
+      if (!line.trim()) continue;
+      const data = safeJson(line) as OllamaResponse;
+      if (data.message?.content) {
+        textAcc += data.message.content;
+        yield { type: "text", text: data.message.content };
+      }
+      for (const c of data.message?.tool_calls ?? []) toolCalls.push(c);
+      if (typeof data.prompt_eval_count === "number") usage.inputTokens = data.prompt_eval_count;
+      if (typeof data.eval_count === "number") usage.outputTokens = data.eval_count;
+    }
+
+    const content: ContentBlock[] = [];
+    if (textAcc) content.push({ type: "text", text: textAcc });
+    let i = 0;
+    for (const call of toolCalls) {
+      content.push({
+        type: "tool_use",
+        id: `ollama_${Date.now()}_${i++}`,
+        name: call.function.name,
+        input: call.function.arguments ?? {},
+      });
+    }
+    yield {
+      type: "final",
+      result: {
+        model,
+        content,
+        stopReason: content.some((b) => b.type === "tool_use") ? "tool_use" : "end_turn",
+        usage,
+        costUsd: 0,
+      },
+    };
   }
 
   async countTokens(request: GenerateRequest): Promise<number> {
@@ -83,6 +140,13 @@ interface OllamaResponse {
   done_reason?: string;
   prompt_eval_count?: number;
   eval_count?: number;
+}
+
+function textOf(content: ContentBlock[]): string {
+  return content
+    .filter((b): b is Extract<ContentBlock, { type: "text" }> => b.type === "text")
+    .map((b) => b.text)
+    .join("");
 }
 
 function toResult(model: string, data: OllamaResponse): GenerateResult {
