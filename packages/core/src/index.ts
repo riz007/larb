@@ -8,3 +8,4 @@ export {
 } from "./agent.js";
 export { ToolRegistry, readOnlyTools, fullTools, orchestratorTools } from "./tools/registry.js";
 export type { Tool, ToolContext, ToolResult } from "./tools/types.js";
+export { RunStateStore, type RunState } from "./runstate.js";

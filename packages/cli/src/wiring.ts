@@ -12,6 +12,7 @@ import { loadAllSkills, loadSkillTools } from "@larb/skills";
 import {
   Orchestrator,
   ToolRegistry,
+  RunStateStore,
   loadConfig,
   readOnlyTools,
   fullTools,
@@ -20,6 +21,7 @@ import {
   type OrchestratorCallbacks,
   type RunMode,
   type RunResult,
+  type RunState,
   type ToolContext,
 } from "@larb/core";
 
@@ -56,8 +58,10 @@ export function buildSession(opts: {
   mode: RunMode;
   approver: Approver;
   callbacks: SessionCallbacks;
+  /** Resume a prior interrupted run instead of starting fresh. */
+  resume?: RunState;
 }): Session {
-  const { projectRoot, mode, approver, callbacks } = opts;
+  const { projectRoot, mode, approver, callbacks, resume } = opts;
   const config = loadConfig(projectRoot);
 
   const audit = new AuditLog(projectRoot);
@@ -97,6 +101,8 @@ export function buildSession(opts: {
   const repoMap = renderRepoMap(buildRepoMap(projectRoot));
   let memory = toolContext.memory.load();
   const orchestrator = new Orchestrator();
+  // Persist run snapshots (run mode only) so a session can be resumed/replayed.
+  const store = mode === "run" ? new RunStateStore(projectRoot) : undefined;
 
   // Compaction summarizes with the cheap worker model to keep long sessions cheap.
   const compactor = new Compactor({
@@ -175,7 +181,7 @@ export function buildSession(opts: {
     isolation: sandbox.isolation,
     run: (task: string) =>
       orchestrator.run({
-        task,
+        task: resume?.task ?? task,
         mode,
         provider: router.provider,
         model: router.modelFor("orchestrator"),
@@ -187,6 +193,8 @@ export function buildSession(opts: {
         repoMap,
         memory,
         compactor,
+        store,
+        resume,
         callbacks,
       }),
   };
