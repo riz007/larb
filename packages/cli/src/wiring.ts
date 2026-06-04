@@ -6,7 +6,7 @@ import {
   type ProjectPolicy,
 } from "@larb/governors";
 import { ProviderRouter } from "@larb/providers";
-import { Sandbox } from "@larb/sandbox";
+import { Sandbox, type IsolationInfo } from "@larb/sandbox";
 import { ProjectMemory, buildRepoMap, renderRepoMap, Compactor } from "@larb/context";
 import { loadAllSkills, loadSkillTools } from "@larb/skills";
 import {
@@ -41,6 +41,8 @@ export interface Session {
   cost: CostGovernor;
   audit: AuditLog;
   provider: ProviderInfo;
+  /** Active execution-isolation level, for an informed trust decision. */
+  isolation: IsolationInfo;
   run(task: string): Promise<RunResult>;
 }
 
@@ -78,10 +80,11 @@ export function buildSession(opts: {
     autoDenyUnknown: mode === "ask",
   });
 
+  const sandbox = new Sandbox({ projectRoot, ...config.sandbox });
   const toolContext: ToolContext = {
     projectRoot,
     permission,
-    sandbox: new Sandbox({ projectRoot }),
+    sandbox,
     audit,
     memory: new ProjectMemory(projectRoot),
     onDiff: callbacks.onDiff,
@@ -169,6 +172,7 @@ export function buildSession(opts: {
       orchestrator: router.modelFor("orchestrator"),
       worker: router.modelFor("worker"),
     },
+    isolation: sandbox.isolation,
     run: (task: string) =>
       orchestrator.run({
         task,

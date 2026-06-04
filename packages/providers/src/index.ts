@@ -4,6 +4,11 @@ export { OpenAIProvider, type OpenAIProviderOptions } from "./openai.js";
 export { OllamaProvider, type OllamaProviderOptions } from "./ollama.js";
 export { priceFor, estimateCost, type ModelPrice } from "./pricing.js";
 export {
+  runConformance,
+  type ConformanceCheck,
+  type ConformanceReport,
+} from "./conformance.js";
+export {
   PROVIDER_PRESETS,
   isKnownProvider,
   listProviders,

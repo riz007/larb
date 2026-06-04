@@ -3,12 +3,15 @@ import { join, resolve } from "node:path";
 import {
   loadAllSkills,
   installSkill,
+  installFromUrl,
+  isRemoteSkillSource,
   loadSkill,
   verifyTier,
   contentHash,
   generateKeypair,
   signSkill,
   addTrustedKey,
+  type SkillInstance,
 } from "@larb/skills";
 
 /** `larb skill <subcommand>` — author, install, inspect, and sign skills. */
@@ -38,7 +41,7 @@ const SKILL_HELP = `larb skill — governed extensibility
 
   larb skill list                       List installed skills + trust tier
   larb skill init <dir>                 Scaffold a new skill
-  larb skill install <dir> [--project]  Install a skill (copy; does not grant trust)
+  larb skill install <dir|url|git> [--project]  Install a skill (copy/download; does not grant trust)
   larb skill verify <dir>               Show manifest, content hash, and trust tier
   larb skill keygen [--name <n>]        Generate an ed25519 signing keypair
   larb skill sign <dir> --key <pem> --pub <pem>   Sign a skill
@@ -101,9 +104,20 @@ function init(args: string[]): void {
 
 function install(projectRoot: string, args: string[]): void {
   const src = args.find((a) => !a.startsWith("--"));
-  if (!src) return fail("Usage: larb skill install <dir> [--project]");
+  if (!src) return fail("Usage: larb skill install <dir|https-url|git-url> [--project]");
   const scope = args.includes("--project") ? "project" : "global";
-  const skill = installSkill(src, { projectRoot, scope });
+
+  if (isRemoteSkillSource(src)) {
+    console.log(`Fetching skill from ${src} …`);
+    installFromUrl(src, { projectRoot, scope })
+      .then((skill) => reportInstalled(scope, skill))
+      .catch((err) => fail(`Install failed: ${(err as Error).message}`));
+    return;
+  }
+  reportInstalled(scope, installSkill(src, { projectRoot, scope }));
+}
+
+function reportInstalled(scope: string, skill: SkillInstance): void {
   console.log(`Installed "${skill.manifest.name}" (${scope}, tier: ${skill.tier}).`);
   if (skill.tier === "community") {
     console.log("⚠ Community tier: unsigned/untrusted. It runs in the tightest");

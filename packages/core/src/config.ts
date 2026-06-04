@@ -8,6 +8,7 @@ import {
   type ProjectPolicy,
 } from "@larb/governors";
 import { DEFAULT_PROVIDER_CONFIG, type ProviderConfig } from "@larb/providers";
+import type { SandboxConfig } from "@larb/sandbox";
 
 export interface LarbConfig {
   provider: ProviderConfig;
@@ -16,6 +17,8 @@ export interface LarbConfig {
   /** Verification commands run after edits (lint/typecheck/build/test). */
   verify: string[];
   maxIterations: number;
+  /** Execution-isolation policy. Trusted (global) config only — see below. */
+  sandbox: SandboxConfig;
 }
 
 export const DEFAULT_CONFIG: LarbConfig = {
@@ -24,6 +27,7 @@ export const DEFAULT_CONFIG: LarbConfig = {
   policy: {},
   verify: [],
   maxIterations: 30,
+  sandbox: { backend: "auto", network: "none" },
 };
 
 /**
@@ -60,6 +64,16 @@ function applyGlobal(config: LarbConfig, raw: Record<string, unknown> | undefine
   if (policy) config.policy = policy;
   if (Array.isArray(raw.verify)) config.verify = raw.verify.map(String);
   if (typeof raw.maxIterations === "number") config.maxIterations = raw.maxIterations;
+
+  // Sandbox isolation policy is trusted-config-only: repo config can never
+  // weaken isolation (see applyProjectProposals, which deliberately ignores it).
+  const sandbox = raw.sandbox as Partial<SandboxConfig> | undefined;
+  if (sandbox) {
+    if (sandbox.backend) config.sandbox.backend = sandbox.backend;
+    if (sandbox.runtime) config.sandbox.runtime = sandbox.runtime;
+    if (sandbox.image) config.sandbox.image = sandbox.image;
+    if (sandbox.network) config.sandbox.network = sandbox.network;
+  }
 }
 
 /** Sanitized application of untrusted repo config — proposals only. */
@@ -91,7 +105,9 @@ function applyProjectProposals(
   if (Array.isArray(raw.verify)) config.verify = raw.verify.map(String);
   if (typeof raw.maxIterations === "number") config.maxIterations = raw.maxIterations;
 
-  // NOTE: policy.allow / policy.deny from repo config is intentionally ignored.
+  // NOTE: policy.allow / policy.deny and the [sandbox] isolation policy from repo
+  // config are intentionally ignored — untrusted config can never grant authority
+  // or weaken execution isolation.
 }
 
 function readTomlSafe(file: string): Record<string, unknown> | undefined {

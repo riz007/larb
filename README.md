@@ -24,10 +24,18 @@ default.
   [Providers](#providers) below.
 - **Agent orchestration loop** — plan → act → observe → verify, with a
   mandatory verification step (lint/build/test) before a task is "done".
-- **Sandboxed command execution** — cwd-scoped, host secrets stripped.
+- **Real sandboxed execution** — commands run in a rootless container
+  (docker/podman) with the project bind-mounted, host secrets withheld, and
+  networking off by default; falls back to a reduced-isolation host subprocess
+  when no runtime is present, and tells you which is active.
+- **Governed network egress** — the agent's only network path is an `http_fetch`
+  tool gated per-host by the `net` capability (default-deny, every host approved
+  and audited).
 - **Incremental repo map** + inspectable markdown memory.
-- **CLI + minimal TUI** with streaming output, diff review, approval prompts,
-  and a live cost meter.
+- **Governed skills, installable from a directory, an https tarball, or a git
+  URL** — signed/manifested, with install ≠ trust (unsigned ⇒ tightest sandbox).
+- **CLI, TUI, and a headless editor bridge** (`larb bridge`, a stdio JSON
+  protocol) — streaming output, diff review, approval prompts, live cost meter.
 
 ## Repository layout
 

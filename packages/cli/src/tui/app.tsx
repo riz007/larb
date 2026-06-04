@@ -184,6 +184,10 @@ function App({ mode, task, projectRoot }: AppProps): JSX.Element {
           : `${label} · ${orchestrator} / ${worker}`,
       );
 
+      // Tell the user how strongly their commands are confined (informed consent).
+      const iso = session.isolation;
+      addEntry(iso.reducedIsolation ? "note" : "header", `sandbox: ${iso.note}`);
+
       const result = await session.run(task);
       flushStream();
       addEntry(
