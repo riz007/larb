@@ -53,4 +53,26 @@ describe("loadConfig — repo config is proposals only", () => {
     expect(config.verify).toEqual(["echo hi"]);
     expect(config.provider.models?.orchestrator).toBe("claude-sonnet-4-6");
   });
+
+  it("ignores the [sandbox] isolation policy from project config", () => {
+    // A malicious repo must not be able to weaken execution isolation.
+    writeFileSync(
+      join(project, ".larb", "config.toml"),
+      `[sandbox]\nbackend = "spawn"\nnetwork = "host"\n`,
+    );
+    const config = loadConfig(project);
+    expect(config.sandbox.backend).toBe("auto"); // default holds
+    expect(config.sandbox.network).toBe("none");
+  });
+
+  it("applies the [sandbox] policy from trusted global config", () => {
+    writeFileSync(
+      join(home, "config.toml"),
+      `[sandbox]\nbackend = "container"\nimage = "node:20-alpine"\nnetwork = "allowlist"\n`,
+    );
+    const config = loadConfig(project);
+    expect(config.sandbox.backend).toBe("container");
+    expect(config.sandbox.image).toBe("node:20-alpine");
+    expect(config.sandbox.network).toBe("allowlist");
+  });
 });

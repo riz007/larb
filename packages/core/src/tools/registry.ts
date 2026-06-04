@@ -3,6 +3,7 @@ import type { Tool } from "./types.js";
 import { readFileTool, writeFileTool, listFilesTool, searchTextTool } from "./fs.js";
 import { runCommandTool } from "./exec.js";
 import { gitTool } from "./git.js";
+import { httpFetchTool } from "./http.js";
 import { delegateTool } from "./delegate.js";
 
 /** Holds the available capability-tools and exposes them as provider tool defs. */
@@ -38,7 +39,15 @@ export function readOnlyTools(): Tool[] {
 
 /** Full toolset for a worker agent (no delegation, to bound recursion). */
 export function fullTools(): Tool[] {
-  return [readFileTool, writeFileTool, listFilesTool, searchTextTool, runCommandTool, gitTool];
+  return [
+    readFileTool,
+    writeFileTool,
+    listFilesTool,
+    searchTextTool,
+    runCommandTool,
+    gitTool,
+    httpFetchTool,
+  ];
 }
 
 /** Orchestrator toolset: the full set plus the ability to delegate to workers. */
@@ -53,5 +62,6 @@ export {
   searchTextTool,
   runCommandTool,
   gitTool,
+  httpFetchTool,
   delegateTool,
 };

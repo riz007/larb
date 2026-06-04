@@ -50,6 +50,18 @@ verify = ["pnpm -s typecheck", "pnpm -s test"]
 
 maxIterations = 30
 
+# Execution isolation. GLOBAL-CONFIG-ONLY — repo config can never weaken this.
+# "auto" runs commands in a throwaway rootless container when docker/podman is
+# available (project bind-mounted, host secrets withheld, networking off), and
+# transparently falls back to a reduced-isolation host subprocess otherwise. The
+# active level is shown at the start of every run.
+[sandbox]
+backend = "auto"     # "auto" | "container" | "spawn"
+# runtime = "docker" # "docker" | "podman" — auto-detected if unset
+# image = "node:20"  # OCI image for the container backend
+network = "none"     # "none" disables egress; "allowlist" enables it (per-host
+                     # gating is via the governed http_fetch tool)
+
 # Optional global-only policy (ignored from project config):
 # [policy]
 # deny = [{ capability = "net", host = "example.com" }]
