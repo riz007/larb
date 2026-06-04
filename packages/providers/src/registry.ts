@@ -1,3 +1,4 @@
+import { SecretBroker } from "@larb/governors";
 import { AnthropicProvider } from "./anthropic.js";
 import { OpenAIProvider } from "./openai.js";
 import { OllamaProvider } from "./ollama.js";
@@ -119,10 +120,14 @@ function resolvePreset(kind: string): ProviderPreset {
   return PROVIDER_PRESETS[kind];
 }
 
-/** Read the provider's API key from the environment (the secrets-broker boundary). */
+/**
+ * Resolve the provider's API key through the {@link SecretBroker} — the single
+ * env-reading boundary (§9). The broker redacts itself everywhere, so the key
+ * is handed only to the adapter and never enters config, logs, or the agent.
+ */
 function requireKey(envName: string | undefined): string {
   if (!envName) throw new MissingApiKeyError("the provider's API key env var");
-  const apiKey = process.env[envName];
-  if (!apiKey) throw new MissingApiKeyError(envName);
-  return apiKey;
+  const broker = new SecretBroker(envName);
+  if (!broker.has()) throw new MissingApiKeyError(envName);
+  return broker.resolve();
 }

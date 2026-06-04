@@ -47,9 +47,9 @@ export class AnthropicProvider implements ModelProvider {
       model,
       max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
       temperature: request.temperature,
-      system: request.system,
+      system: cachedSystem(request.system),
       messages: toAnthropicMessages(request.messages),
-      tools: request.tools ? request.tools.map(toAnthropicTool) : undefined,
+      tools: request.tools ? cachedTools(request.tools) : undefined,
     });
     return this.toResult(model, msg);
   }
@@ -60,9 +60,9 @@ export class AnthropicProvider implements ModelProvider {
       model,
       max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
       temperature: request.temperature,
-      system: request.system,
+      system: cachedSystem(request.system),
       messages: toAnthropicMessages(request.messages),
-      tools: request.tools ? request.tools.map(toAnthropicTool) : undefined,
+      tools: request.tools ? cachedTools(request.tools) : undefined,
     });
 
     for await (const event of stream as AsyncIterable<AnthropicStreamEvent>) {
@@ -119,6 +119,8 @@ export class AnthropicProvider implements ModelProvider {
     const usage: TokenUsage = {
       inputTokens: msg.usage.input_tokens,
       outputTokens: msg.usage.output_tokens,
+      cacheReadTokens: msg.usage.cache_read_input_tokens ?? 0,
+      cacheWriteTokens: msg.usage.cache_creation_input_tokens ?? 0,
     };
     return {
       model,
@@ -171,6 +173,26 @@ function toAnthropicTool(tool: ToolDefinition): Anthropic.Tool {
     description: tool.description,
     input_schema: tool.inputSchema as Anthropic.Tool.InputSchema,
   };
+}
+
+/**
+ * Wrap the system prompt as a cacheable text block. The system prompt holds the
+ * large, stable repo map + instructions, so caching it (and the tools, below)
+ * means the agent re-reads the prefix from cache on every iteration at ~1/10th
+ * the input price instead of re-billing it in full — the dominant cost in long
+ * autonomous runs.
+ */
+function cachedSystem(text: string): Anthropic.TextBlockParam[] {
+  return [{ type: "text", text, cache_control: { type: "ephemeral" } }];
+}
+
+/** Tools with a cache breakpoint on the last one, caching the system+tools prefix. */
+function cachedTools(tools: ToolDefinition[]): Anthropic.Tool[] {
+  return tools.map((tool, i) => {
+    const t = toAnthropicTool(tool);
+    if (i === tools.length - 1) t.cache_control = { type: "ephemeral" };
+    return t;
+  });
 }
 
 function mapStopReason(reason: string | null): StopReason {

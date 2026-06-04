@@ -8,3 +8,4 @@ export {
   type ProjectPolicy,
 } from "./permission.js";
 export { CostGovernor, SpendLimitError } from "./cost.js";
+export { SecretBroker, SecretUnavailableError } from "./secrets.js";
