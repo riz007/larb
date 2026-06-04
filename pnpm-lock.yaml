@@ -23,6 +23,25 @@ importers:
 
   packages/cli:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.39.0
+        version: 0.39.0
+      diff:
+        specifier: ^7.0.0
+        version: 7.0.0
+      ink:
+        specifier: ^5.1.0
+        version: 5.2.1(@types/react@18.3.29)(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      smol-toml:
+        specifier: ^1.3.1
+        version: 1.6.1
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
       '@larb/context':
         specifier: workspace:*
         version: link:../context
@@ -41,13 +60,6 @@ importers:
       '@larb/skills':
         specifier: workspace:*
         version: link:../skills
-      ink:
-        specifier: ^5.1.0
-        version: 5.2.1(@types/react@18.3.29)(react@18.3.1)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-    devDependencies:
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.29

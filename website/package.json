@@ -1,0 +1,17 @@
+{
+  "name": "larb-website",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "description": "Larb documentation site (VitePress, bilingual EN/TH).",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "mermaid": "^11.4.1",
+    "vitepress": "^1.5.0",
+    "vitepress-plugin-mermaid": "^2.0.17"
+  }
+}
