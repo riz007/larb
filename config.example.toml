@@ -59,8 +59,11 @@ maxIterations = 30
 backend = "auto"     # "auto" | "container" | "spawn"
 # runtime = "docker" # "docker" | "podman" — auto-detected if unset
 # image = "node:20"  # OCI image for the container backend
-network = "none"     # "none" disables egress; "allowlist" enables it (per-host
-                     # gating is via the governed http_fetch tool)
+network = "none"     # "none" disables egress (--network none). "allowlist" routes
+                     # container egress through a host proxy that permits ONLY the
+                     # hosts in egressAllow below (default-deny; filters
+                     # proxy-respecting clients like package managers/curl).
+# egressAllow = ["registry.npmjs.org", "pypi.org"]
 
 # Optional global-only policy (ignored from project config):
 # [policy]

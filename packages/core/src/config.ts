@@ -73,6 +73,8 @@ function applyGlobal(config: LarbConfig, raw: Record<string, unknown> | undefine
     if (sandbox.runtime) config.sandbox.runtime = sandbox.runtime;
     if (sandbox.image) config.sandbox.image = sandbox.image;
     if (sandbox.network) config.sandbox.network = sandbox.network;
+    if (Array.isArray(sandbox.egressAllow))
+      config.sandbox.egressAllow = sandbox.egressAllow.map(String);
   }
 }
 

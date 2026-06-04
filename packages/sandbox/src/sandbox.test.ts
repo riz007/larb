@@ -62,9 +62,27 @@ describe("ContainerBackend argv", () => {
     const args = backend.buildArgs("env");
     const envFlags = args.filter((_, i) => args[i - 1] === "-e");
     // Only the confinement marker crosses the boundary — no *_API_KEY / *_TOKEN.
+    // (No proxy URL passed ⇒ no proxy env yet.)
     expect(envFlags).toEqual(["LARB_SANDBOX=1"]);
-    // allowlist mode keeps networking on (bridge), per-host filtering is via http_fetch
+    // allowlist mode keeps networking on (bridge); egress is gated by the proxy
     expect(args[args.indexOf("--network") + 1]).toBe("bridge");
+  });
+
+  it("routes egress through the host proxy in allowlist mode", () => {
+    const backend = new ContainerBackend({
+      projectRoot: PROJECT,
+      runtime: "docker",
+      image: "node:20",
+      network: "allowlist",
+      egressAllow: ["registry.npmjs.org"],
+    });
+    const args = backend.buildArgs("npm ci", "http://host.docker.internal:54321");
+    expect(args).toContain("--add-host");
+    expect(args).toContain("host.docker.internal:host-gateway");
+    const envFlags = args.filter((_, i) => args[i - 1] === "-e");
+    expect(envFlags).toContain("HTTPS_PROXY=http://host.docker.internal:54321");
+    expect(envFlags).toContain("LARB_SANDBOX=1");
+    expect(backend.isolation.note).toContain("registry.npmjs.org");
   });
 
   it("reports non-reduced isolation and the chosen runtime", () => {

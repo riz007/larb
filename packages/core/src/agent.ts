@@ -9,6 +9,7 @@ import { type Compactor, guardUntrusted } from "@larb/context";
 import type { LarbConfig } from "./config.js";
 import type { ToolContext } from "./tools/types.js";
 import { ToolRegistry } from "./tools/registry.js";
+import { RunStateStore, type RunState } from "./runstate.js";
 
 export type RunMode = "ask" | "run";
 
@@ -41,6 +42,10 @@ export interface RunOptions {
   memory: string;
   /** Optional proactive context compaction for long sessions. */
   compactor?: Compactor;
+  /** Persist run snapshots here so the run can be resumed/replayed (§7.1). */
+  store?: RunStateStore;
+  /** Resume from a prior snapshot instead of starting fresh. */
+  resume?: RunState;
   callbacks?: OrchestratorCallbacks;
 }
 
@@ -62,20 +67,43 @@ const MAX_VERIFY_ATTEMPTS = 3;
 export class Orchestrator {
   async run(opts: RunOptions): Promise<RunResult> {
     const { provider, model, registry, toolContext, cost, audit, config, callbacks } = opts;
-    let messages: Message[] = [
+    let messages: Message[] = opts.resume?.messages ?? [
       { role: "user", content: [{ type: "text", text: opts.task }] },
     ];
     const system = buildSystemPrompt(opts);
     const tools = registry.definitions();
 
-    let editsMade = false;
-    let verifyAttempts = 0;
-    let verified: RunResult["verified"] = "skipped";
-    let finalText = "";
+    // Durable run state (§7.1): restore on resume, snapshot every iteration so an
+    // interrupted run can be picked up exactly where it stopped.
+    const runId = opts.resume?.id ?? RunStateStore.newId();
+    const startedAt = opts.resume?.startedAt ?? new Date().toISOString();
+    const startIteration = (opts.resume?.iteration ?? 0) + 1;
 
-    for (let iteration = 1; iteration <= config.maxIterations; iteration++) {
-      // Proactively compact long sessions before they overflow the window.
-      if (opts.compactor) {
+    let editsMade = opts.resume?.editsMade ?? false;
+    let verifyAttempts = 0;
+    let verified: RunResult["verified"] = opts.resume?.verified ?? "skipped";
+    let finalText = "";
+    let iteration = startIteration;
+
+    const persist = (status: RunState["status"]) =>
+      opts.store?.save({
+        id: runId,
+        task: opts.task,
+        mode: opts.mode,
+        model,
+        messages,
+        iteration,
+        editsMade,
+        verified,
+        status,
+        startedAt,
+        updatedAt: new Date().toISOString(),
+      });
+
+    try {
+      for (iteration = startIteration; iteration <= config.maxIterations; iteration++) {
+        // Proactively compact long sessions before they overflow the window.
+        if (opts.compactor) {
         const c = await opts.compactor.maybeCompact(system, messages);
         if (c.compacted) {
           messages = c.messages;
@@ -136,9 +164,11 @@ export class Orchestrator {
                 },
               ],
             });
+            persist("running");
             continue;
           }
         }
+        persist("done");
         return { finalText, iterations: iteration, editsMade, verified };
       }
 
@@ -184,10 +214,18 @@ export class Orchestrator {
           isError: !ok,
         });
       }
-      messages.push({ role: "user", content: toolResults });
-    }
+        messages.push({ role: "user", content: toolResults });
+        persist("running");
+      }
 
-    return { finalText, iterations: config.maxIterations, editsMade, verified };
+      // Iteration budget exhausted — resumable, not done.
+      persist("interrupted");
+      return { finalText, iterations: config.maxIterations, editsMade, verified };
+    } catch (err) {
+      // Spend limit, crash, or cancellation — leave a resumable snapshot.
+      persist("interrupted");
+      throw err;
+    }
   }
 
   private async callModel(

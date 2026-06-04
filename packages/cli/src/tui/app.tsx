@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Text, Static, useApp, useInput, render } from "ink";
 import { TrustEngine, type Approver, type Decision, type PermissionRequest } from "@larb/governors";
-import type { RunMode } from "@larb/core";
+import type { RunMode, RunState } from "@larb/core";
 import { buildSession, type SessionCallbacks } from "../wiring.js";
 
 interface Entry {
@@ -48,9 +48,11 @@ export interface AppProps {
   mode: RunMode;
   task: string;
   projectRoot: string;
+  /** When set, resume this interrupted run instead of starting fresh. */
+  resume?: RunState;
 }
 
-function App({ mode, task, projectRoot }: AppProps): JSX.Element {
+function App({ mode, task, projectRoot, resume }: AppProps): JSX.Element {
   const { exit } = useApp();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [streamText, setStreamText] = useState("");
@@ -170,7 +172,7 @@ function App({ mode, task, projectRoot }: AppProps): JSX.Element {
 
       let session;
       try {
-        session = buildSession({ projectRoot, mode, approver, callbacks });
+        session = buildSession({ projectRoot, mode, approver, callbacks, resume });
       } catch (err) {
         addEntry("error", (err as Error).message);
         return finish();

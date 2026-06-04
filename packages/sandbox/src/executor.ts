@@ -19,6 +19,8 @@ export interface SandboxConfig {
   image?: string;
   /** Container egress posture. */
   network?: "none" | "allowlist";
+  /** Hosts reachable in "allowlist" mode; everything else is denied. */
+  egressAllow?: string[];
 }
 
 const DEFAULT_IMAGE = "node:20";

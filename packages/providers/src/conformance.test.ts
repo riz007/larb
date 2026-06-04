@@ -63,12 +63,18 @@ describe("runConformance", () => {
 });
 
 describe("built-in adapters conform (mocked transport)", () => {
-  it("OpenAIProvider passes against a mocked Chat Completions response", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      jsonResponse({
-        choices: [{ message: { content: "hello" }, finish_reason: "stop" }],
-        usage: { prompt_tokens: 3, completion_tokens: 1 },
-      }),
+  it("OpenAIProvider passes (JSON for generate, SSE for stream)", async () => {
+    globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) =>
+      isStreaming(init)
+        ? sseResponse([
+            'data: {"choices":[{"delta":{"content":"hello"}}]}',
+            'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":1}}',
+            "data: [DONE]",
+          ])
+        : jsonResponse({
+            choices: [{ message: { content: "hello" }, finish_reason: "stop" }],
+            usage: { prompt_tokens: 3, completion_tokens: 1 },
+          }),
     ) as typeof fetch;
 
     const provider = new OpenAIProvider({
@@ -79,14 +85,19 @@ describe("built-in adapters conform (mocked transport)", () => {
     expect(report.pass).toBe(true);
   });
 
-  it("OllamaProvider passes against a mocked /api/chat response", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      jsonResponse({
-        message: { content: "hello" },
-        done_reason: "stop",
-        prompt_eval_count: 3,
-        eval_count: 1,
-      }),
+  it("OllamaProvider passes (JSON for generate, NDJSON for stream)", async () => {
+    globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) =>
+      isStreaming(init)
+        ? ndjsonResponse([
+            { message: { content: "hello" } },
+            { message: { content: "" }, done: true, prompt_eval_count: 3, eval_count: 1 },
+          ])
+        : jsonResponse({
+            message: { content: "hello" },
+            done_reason: "stop",
+            prompt_eval_count: 3,
+            eval_count: 1,
+          }),
     ) as typeof fetch;
 
     const provider = new OllamaProvider({ defaultModel: "llama3.1" });
@@ -95,9 +106,31 @@ describe("built-in adapters conform (mocked transport)", () => {
   });
 });
 
+function isStreaming(init: RequestInit | undefined): boolean {
+  try {
+    return Boolean(JSON.parse(String(init?.body ?? "{}")).stream);
+  } catch {
+    return false;
+  }
+}
+
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
     headers: { "content-type": "application/json" },
+  });
+}
+
+function sseResponse(lines: string[]): Response {
+  return new Response(lines.map((l) => l + "\n\n").join(""), {
+    status: 200,
+    headers: { "content-type": "text/event-stream" },
+  });
+}
+
+function ndjsonResponse(objs: unknown[]): Response {
+  return new Response(objs.map((o) => JSON.stringify(o)).join("\n") + "\n", {
+    status: 200,
+    headers: { "content-type": "application/x-ndjson" },
   });
 }

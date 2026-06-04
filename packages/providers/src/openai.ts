@@ -9,6 +9,7 @@ import type {
   StopReason,
   StreamEvent,
 } from "./types.js";
+import { readLines, safeJson } from "./stream.js";
 
 const DEFAULT_BASE = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-4o";
@@ -75,14 +76,86 @@ export class OpenAIProvider implements ModelProvider {
   }
 
   async *stream(request: GenerateRequest): AsyncIterable<StreamEvent> {
-    // Non-incremental for now: one round-trip, surfaced as text + final.
-    const result = await this.generate(request);
-    const text = result.content
-      .filter((b): b is Extract<ContentBlock, { type: "text" }> => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-    if (text) yield { type: "text", text };
-    yield { type: "final", result };
+    const model = request.model ?? this.defaultModel;
+    const res = await fetch(`${this.baseURL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${this.opts.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+        temperature: request.temperature,
+        stream: true,
+        stream_options: { include_usage: true },
+        messages: toOpenAIMessages(request.system, request.messages),
+        tools: request.tools?.map((t) => ({
+          type: "function",
+          function: { name: t.name, description: t.description, parameters: t.inputSchema },
+        })),
+      }),
+    });
+    if (!res.ok) throw new Error(`OpenAI API error ${res.status}: ${await res.text()}`);
+
+    // Some compatible endpoints ignore stream:true and return plain JSON; fall
+    // back to a single round-trip so streaming is never a hard requirement.
+    if (!res.body || !res.headers.get("content-type")?.includes("event-stream")) {
+      const data = (await res.json()) as OpenAIResponse;
+      const result = toResult(model, data, this.estimateCost.bind(this));
+      const text = textOf(result.content);
+      if (text) yield { type: "text", text };
+      yield { type: "final", result };
+      return;
+    }
+
+    let textAcc = "";
+    const tools = new Map<number, { id: string; name: string; args: string }>();
+    let usage = { inputTokens: 0, outputTokens: 0 };
+    let finish: string | undefined;
+
+    for await (const line of readLines(res.body)) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const payload = trimmed.slice("data:".length).trim();
+      if (payload === "[DONE]") break;
+      const data = safeJson(payload) as OpenAIStreamChunk;
+      const choice = data.choices?.[0];
+      if (choice?.delta?.content) {
+        textAcc += choice.delta.content;
+        yield { type: "text", text: choice.delta.content };
+      }
+      for (const tc of choice?.delta?.tool_calls ?? []) {
+        const cur = tools.get(tc.index) ?? { id: "", name: "", args: "" };
+        if (tc.id) cur.id = tc.id;
+        if (tc.function?.name) cur.name = tc.function.name;
+        if (tc.function?.arguments) cur.args += tc.function.arguments;
+        tools.set(tc.index, cur);
+      }
+      if (choice?.finish_reason) finish = choice.finish_reason;
+      if (data.usage) {
+        usage = {
+          inputTokens: data.usage.prompt_tokens ?? 0,
+          outputTokens: data.usage.completion_tokens ?? 0,
+        };
+      }
+    }
+
+    const content: ContentBlock[] = [];
+    if (textAcc) content.push({ type: "text", text: textAcc });
+    for (const t of tools.values()) {
+      content.push({ type: "tool_use", id: t.id, name: t.name, input: safeJson(t.args) });
+    }
+    yield {
+      type: "final",
+      result: {
+        model,
+        content,
+        stopReason: mapStop(finish),
+        usage,
+        costUsd: this.estimateCost(usage, model),
+      },
+    };
   }
 
   async countTokens(request: GenerateRequest): Promise<number> {
@@ -100,6 +173,29 @@ interface OpenAIResponse {
     finish_reason: string;
   }>;
   usage?: { prompt_tokens: number; completion_tokens: number };
+}
+
+/** One SSE chunk in a streamed Chat Completions response. */
+interface OpenAIStreamChunk {
+  choices?: Array<{
+    delta?: {
+      content?: string;
+      tool_calls?: Array<{
+        index: number;
+        id?: string;
+        function?: { name?: string; arguments?: string };
+      }>;
+    };
+    finish_reason?: string;
+  }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+}
+
+function textOf(content: ContentBlock[]): string {
+  return content
+    .filter((b): b is Extract<ContentBlock, { type: "text" }> => b.type === "text")
+    .map((b) => b.text)
+    .join("");
 }
 
 function toResult(

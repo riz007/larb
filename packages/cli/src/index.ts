@@ -5,6 +5,9 @@ import { trustCommand } from "./commands/trust.js";
 import { skillCommand } from "./commands/skill.js";
 import { providersCommand } from "./commands/providers.js";
 import { bridgeCommand } from "./commands/bridge.js";
+import { runsCommand } from "./commands/runs.js";
+import { benchCommand } from "./commands/bench.js";
+import { RunStateStore } from "@larb/core";
 
 const VERSION = "0.1.0";
 
@@ -13,11 +16,14 @@ const HELP = `Larb — open-source, model-agnostic, security-first coding agent
 Usage:
   larb ask <question>     Answer a question about this repo (read-only)
   larb run <task>         Autonomously complete a task (prompts for writes/exec)
+  larb runs               List run snapshots (resumable ones are marked)
+  larb resume [id]        Resume an interrupted run (latest if no id given)
   larb trust [flags]      Show or set trust for this directory
                           flags: --full | --read-only | --revoke
   larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
   larb providers [name]   List model providers (or show one's details)
   larb bridge             Drive the agent over a stdio JSON protocol (for editors)
+  larb bench <suite>      Run a task suite; report resolution rate + cost/task
   larb audit              Show the audit log + cost summary for this project
   larb help               Show this help
   larb version            Show version
@@ -44,6 +50,20 @@ function main(): void {
       runInteractive({ mode: "run", task, projectRoot: cwd });
       return;
     }
+    case "runs":
+      return runsCommand(cwd);
+    case "resume": {
+      const store = new RunStateStore(cwd);
+      const id = rest[0];
+      const state = id ? store.load(id) : store.latest(true);
+      if (!state) {
+        return fail(
+          id ? `No run found with id "${id}".` : "No resumable run found. See `larb runs`.",
+        );
+      }
+      runInteractive({ mode: "run", task: state.task, projectRoot: cwd, resume: state });
+      return;
+    }
     case "trust":
       return trustCommand(cwd, rest);
     case "skill":
@@ -52,6 +72,8 @@ function main(): void {
       return providersCommand(rest);
     case "bridge":
       return bridgeCommand(cwd);
+    case "bench":
+      return benchCommand(cwd, rest);
     case "audit":
       return auditCommand(cwd);
     case "version":

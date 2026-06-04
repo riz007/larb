@@ -28,14 +28,20 @@ default.
   (docker/podman) with the project bind-mounted, host secrets withheld, and
   networking off by default; falls back to a reduced-isolation host subprocess
   when no runtime is present, and tells you which is active.
-- **Governed network egress** — the agent's only network path is an `http_fetch`
-  tool gated per-host by the `net` capability (default-deny, every host approved
-  and audited).
+- **Governed network egress** — the agent's only in-process network path is an
+  `http_fetch` tool gated per-host by the `net` capability (default-deny, every
+  host approved and audited); in container `allowlist` mode, command egress is
+  routed through a host proxy that permits only allow-listed hosts.
+- **Durable run state** — every run is snapshotted; `larb runs` lists them and
+  `larb resume` continues an interrupted one exactly where it stopped.
 - **Incremental repo map** + inspectable markdown memory.
 - **Governed skills, installable from a directory, an https tarball, or a git
   URL** — signed/manifested, with install ≠ trust (unsigned ⇒ tightest sandbox).
+- **Benchmark harness** — `larb bench <suite>` reports resolution rate and
+  cost-per-task (the §14 metrics).
 - **CLI, TUI, and a headless editor bridge** (`larb bridge`, a stdio JSON
-  protocol) — streaming output, diff review, approval prompts, live cost meter.
+  protocol) — true incremental streaming, diff review, approval prompts, live
+  cost meter.
 
 ## Repository layout
 
