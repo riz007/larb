@@ -9,6 +9,7 @@
   "dependencies": {
     "@larb/context": "workspace:*",
     "@larb/governors": "workspace:*",
+    "@larb/mcp": "workspace:*",
     "@larb/providers": "workspace:*",
     "@larb/sandbox": "workspace:*",
     "diff": "^7.0.0",

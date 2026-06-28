@@ -4,6 +4,7 @@ import { auditCommand } from "./commands/audit.js";
 import { trustCommand } from "./commands/trust.js";
 import { skillCommand } from "./commands/skill.js";
 import { providersCommand } from "./commands/providers.js";
+import { mcpCommand } from "./commands/mcp.js";
 import { bridgeCommand } from "./commands/bridge.js";
 import { runsCommand } from "./commands/runs.js";
 import { benchCommand } from "./commands/bench.js";
@@ -22,6 +23,7 @@ Usage:
                           flags: --full | --read-only | --revoke
   larb skill <cmd>        Manage skills (list/init/install/verify/sign/keygen)
   larb providers [name]   List model providers (or show one's details)
+  larb mcp [probe]        List configured MCP servers (or probe them for tools)
   larb bridge             Drive the agent over a stdio JSON protocol (for editors)
   larb bench <suite>      Run a task suite (or --swebench <jsonl>); report cost/task
   larb audit              Show the audit log + cost summary for this project
@@ -70,6 +72,8 @@ function main(): void {
       return skillCommand(cwd, rest);
     case "providers":
       return providersCommand(rest);
+    case "mcp":
+      return mcpCommand(cwd, rest);
     case "bridge":
       return bridgeCommand(cwd);
     case "bench":

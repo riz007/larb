@@ -12,7 +12,8 @@ export type Capability =
   | "exec"
   | "net"
   | "git"
-  | "secret";
+  | "secret"
+  | "mcp";
 
 export const ALL_CAPABILITIES: readonly Capability[] = [
   "fs.read",
@@ -21,6 +22,7 @@ export const ALL_CAPABILITIES: readonly Capability[] = [
   "net",
   "git",
   "secret",
+  "mcp",
 ];
 
 /**
@@ -31,9 +33,9 @@ export interface PermissionRequest {
   capability: Capability;
   /** Absolute path the capability targets (fs.*). */
   path?: string;
-  /** Network host the capability targets (net). */
+  /** Network host the capability targets (net), or the server name (mcp). */
   host?: string;
-  /** Command line the capability targets (exec/git). */
+  /** Command line the capability targets (exec/git), or the tool name (mcp). */
   command?: string;
   /** Human-readable reason shown in the approval prompt. */
   reason: string;

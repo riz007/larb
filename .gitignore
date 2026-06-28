@@ -9,3 +9,7 @@ dist/
 *.log
 .DS_Store
 coverage/
+
+# Internal, not-for-release: planning/design notes and local QA tooling.
+docs/internal/
+scripts/smoke.sh

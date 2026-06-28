@@ -1,0 +1,12 @@
+{
+  "name": "@larb/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@larb/governors": "workspace:*"
+  }
+}

@@ -40,6 +40,7 @@ const WORKSPACES = [
   "sandbox",
   "context",
   "governors",
+  "mcp",
   "skills",
   "skills-sdk",
 ];

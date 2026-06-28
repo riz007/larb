@@ -9,6 +9,7 @@ import {
 } from "@larb/governors";
 import { DEFAULT_PROVIDER_CONFIG, type ProviderConfig } from "@larb/providers";
 import type { SandboxConfig } from "@larb/sandbox";
+import type { McpServerConfig } from "@larb/mcp";
 
 export interface LarbConfig {
   provider: ProviderConfig;
@@ -19,6 +20,12 @@ export interface LarbConfig {
   maxIterations: number;
   /** Execution-isolation policy. Trusted (global) config only — see below. */
   sandbox: SandboxConfig;
+  /**
+   * MCP servers the agent may use. Trusted (global) config ONLY — a stdio server
+   * spawns an arbitrary command, so repo config can never define one (that would
+   * be RCE by `git clone`). See applyProjectProposals.
+   */
+  mcp: McpServerConfig[];
 }
 
 export const DEFAULT_CONFIG: LarbConfig = {
@@ -28,6 +35,7 @@ export const DEFAULT_CONFIG: LarbConfig = {
   verify: [],
   maxIterations: 30,
   sandbox: { backend: "auto", network: "none" },
+  mcp: [],
 };
 
 /**
@@ -76,6 +84,31 @@ function applyGlobal(config: LarbConfig, raw: Record<string, unknown> | undefine
     if (Array.isArray(sandbox.egressAllow))
       config.sandbox.egressAllow = sandbox.egressAllow.map(String);
   }
+
+  // MCP servers are trusted-config-only (a stdio server spawns a command).
+  if (Array.isArray(raw.mcp)) config.mcp = parseMcpServers(raw.mcp);
+}
+
+/** Parse and validate `[[mcp]]` tables; silently drop malformed entries. */
+function parseMcpServers(raw: unknown[]): McpServerConfig[] {
+  const servers: McpServerConfig[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const e = entry as Record<string, unknown>;
+    const name = typeof e.name === "string" ? e.name.trim() : "";
+    const command = typeof e.command === "string" ? e.command.trim() : "";
+    if (!name || !command) continue; // v1 supports stdio only; both are required
+    const server: McpServerConfig = { name, command };
+    if (typeof e.transport === "string") server.transport = e.transport as "stdio";
+    if (Array.isArray(e.args)) server.args = e.args.map(String);
+    if (e.env && typeof e.env === "object") {
+      server.env = Object.fromEntries(
+        Object.entries(e.env as Record<string, unknown>).map(([k, v]) => [k, String(v)]),
+      );
+    }
+    servers.push(server);
+  }
+  return servers;
 }
 
 /** Sanitized application of untrusted repo config — proposals only. */
@@ -107,9 +140,9 @@ function applyProjectProposals(
   if (Array.isArray(raw.verify)) config.verify = raw.verify.map(String);
   if (typeof raw.maxIterations === "number") config.maxIterations = raw.maxIterations;
 
-  // NOTE: policy.allow / policy.deny and the [sandbox] isolation policy from repo
-  // config are intentionally ignored — untrusted config can never grant authority
-  // or weaken execution isolation.
+  // NOTE: policy.allow / policy.deny, the [sandbox] isolation policy, and [[mcp]]
+  // servers from repo config are intentionally ignored — untrusted config can
+  // never grant authority, weaken execution isolation, or spawn a process.
 }
 
 function readTomlSafe(file: string): Record<string, unknown> | undefined {

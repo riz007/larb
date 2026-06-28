@@ -68,3 +68,26 @@ network = "none"     # "none" disables egress (--network none). "allowlist" rout
 # Optional global-only policy (ignored from project config):
 # [policy]
 # deny = [{ capability = "net", host = "example.com" }]
+
+# Model Context Protocol (MCP) servers. GLOBAL-CONFIG-ONLY — a stdio server
+# spawns a command, so repo config can never define one (that would be RCE by
+# `git clone`). Each server's tools appear to the agent as `mcp__<name>__<tool>`
+# and every call requires the `mcp` capability for that server (default-deny,
+# approved and audited). Servers connect only inside a `run` (after a trust
+# decision) and are torn down when it finishes.
+#
+# Child processes get a scrubbed env (PATH/HOME baseline) plus only the `env`
+# below; `${VAR}` expands from your host environment so secrets stay out of
+# plaintext config.
+#
+# [[mcp]]
+# name    = "filesystem"
+# command = "npx"
+# args    = ["-y", "@modelcontextprotocol/server-filesystem", "/srv/data"]
+#
+# [[mcp]]
+# name    = "github"
+# command = "docker"
+# args    = ["run", "-i", "--rm", "ghcr.io/github/github-mcp-server"]
+# [mcp.env]
+# GITHUB_TOKEN = "${GITHUB_TOKEN}"

@@ -1,7 +1,6 @@
 {
   "name": "@larb/cli",
   "version": "0.1.0-alpha.1",
-  "private": true,
   "description": "Larb CLI + TUI — open-source, model-agnostic, security-first autonomous coding agent",
   "keywords": [
     "coding-agent",
@@ -19,9 +18,24 @@
     "open-source"
   ],
   "license": "Apache-2.0",
+  "homepage": "https://github.com/riz007/larb#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/riz007/larb.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/riz007/larb/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "bin": {
     "larb": "./dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "prepublishOnly": "node ../../scripts/build.mjs"
@@ -30,7 +44,10 @@
     ".": "./src/index.ts"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "comment": "dist bundles the @larb/* workspace source, so only the third-party closure is a runtime dependency; the workspace packages are build-time devDependencies.",
   "dependencies": {
@@ -45,6 +62,7 @@
     "@larb/context": "workspace:*",
     "@larb/core": "workspace:*",
     "@larb/governors": "workspace:*",
+    "@larb/mcp": "workspace:*",
     "@larb/providers": "workspace:*",
     "@larb/sandbox": "workspace:*",
     "@larb/skills": "workspace:*",

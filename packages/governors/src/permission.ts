@@ -95,6 +95,11 @@ export class PermissionEngine {
       case "net":
         grant.host = request.host;
         break;
+      case "mcp":
+        // Scope an "always" grant to the whole server (host), mirroring net's
+        // per-host granularity; allow-once/session cover finer per-call use.
+        grant.host = request.host;
+        break;
       case "secret":
         break;
     }

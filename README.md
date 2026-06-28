@@ -42,6 +42,15 @@ default.
 - **Incremental repo map** + inspectable markdown memory.
 - **Governed skills, installable from a directory, an https tarball, or a git
   URL** — signed/manifested, with install ≠ trust (unsigned ⇒ tightest sandbox).
+- **MCP (Model Context Protocol) servers** — plug in external tools (filesystem,
+  GitHub, custom company servers) via `[[mcp]]` in your global config. Each
+  remote tool is a permission-gated, audited tool (`mcp__<server>__<tool>`);
+  servers connect only inside a run, after trust. Inspect them with
+  `larb mcp` / `larb mcp probe`.
+- **`AGENTS.md` project instructions** — Larb reads `AGENTS.md` (and
+  `.larb/AGENTS.md`) and injects it as advisory guidance, so a repo can describe
+  its build/test commands and conventions. It shapes the agent's approach but
+  never overrides the safety principles or the permission engine.
 - **Benchmark harness** — `larb bench <suite>` reports resolution rate and
   cost-per-task (the §14 metrics).
 - **CLI, TUI, and a headless editor bridge** (`larb bridge`, a stdio JSON
@@ -158,6 +167,9 @@ This is an alpha. Be aware of these before relying on it:
   dataset repos and per-repo test commands ([`docs/swebench.md`](./docs/swebench.md)).
 - **The editor bridge** (`larb bridge`) is a minimal stdio protocol, not yet a
   packaged editor extension.
+- **MCP support is stdio-only** for now (the common case); SSE/HTTP transports
+  and MCP resources/prompts are planned behind the same client interface. MCP
+  servers are **global-config-only** — a repo can never define one.
 - **`larb bench`** runs tasks autonomously with auto-approval — point it at a
   disposable checkout only.
 - Prompt caching and streaming are covered by tests against mocked transports;

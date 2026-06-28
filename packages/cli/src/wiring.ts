@@ -7,8 +7,15 @@ import {
 } from "@larb/governors";
 import { ProviderRouter } from "@larb/providers";
 import { Sandbox, type IsolationInfo } from "@larb/sandbox";
-import { ProjectMemory, buildRepoMap, renderRepoMap, Compactor } from "@larb/context";
+import {
+  ProjectMemory,
+  buildRepoMap,
+  renderRepoMap,
+  Compactor,
+  loadAgentInstructions,
+} from "@larb/context";
 import { loadAllSkills, loadSkillTools } from "@larb/skills";
+import { McpManager } from "@larb/mcp";
 import {
   Orchestrator,
   ToolRegistry,
@@ -99,6 +106,7 @@ export function buildSession(opts: {
     mode === "ask" ? readOnlyTools() : orchestratorTools(),
   );
   const repoMap = renderRepoMap(buildRepoMap(projectRoot));
+  const agentInstructions = loadAgentInstructions(projectRoot);
   let memory = toolContext.memory.load();
   const orchestrator = new Orchestrator();
   // Persist run snapshots (run mode only) so a session can be resumed/replayed.
@@ -130,6 +138,7 @@ export function buildSession(opts: {
         config: { ...config, maxIterations: Math.min(config.maxIterations, 12) },
         repoMap,
         memory,
+        agentInstructions,
         compactor,
         callbacks,
       });
@@ -166,6 +175,14 @@ export function buildSession(opts: {
     if (docs) memory = `${memory}\n\n## Installed skills\n${docs}`;
   }
 
+  // MCP servers (run mode only): connected lazily at the start of run() and torn
+  // down when it finishes — never at boot, never before a trust decision. Each
+  // remote tool is registered as a permission-gated tool like any other.
+  const mcpManager =
+    mode === "run" && config.mcp.length > 0
+      ? new McpManager(config.mcp, { permission, onNote: callbacks.onNote })
+      : undefined;
+
   cost.beginRun();
 
   return {
@@ -179,23 +196,40 @@ export function buildSession(opts: {
       worker: router.modelFor("worker"),
     },
     isolation: sandbox.isolation,
-    run: (task: string) =>
-      orchestrator.run({
-        task: resume?.task ?? task,
-        mode,
-        provider: router.provider,
-        model: router.modelFor("orchestrator"),
-        registry,
-        toolContext,
-        cost,
-        audit,
-        config,
-        repoMap,
-        memory,
-        compactor,
-        store,
-        resume,
-        callbacks,
-      }),
+    run: async (task: string) => {
+      if (mcpManager) {
+        await mcpManager.connectAll();
+        for (const t of mcpManager.tools()) {
+          registry.add({
+            name: t.name,
+            description: t.description,
+            inputSchema: t.inputSchema,
+            execute: (input) => t.execute(input),
+          });
+        }
+      }
+      try {
+        return await orchestrator.run({
+          task: resume?.task ?? task,
+          mode,
+          provider: router.provider,
+          model: router.modelFor("orchestrator"),
+          registry,
+          toolContext,
+          cost,
+          audit,
+          config,
+          repoMap,
+          memory,
+          agentInstructions,
+          compactor,
+          store,
+          resume,
+          callbacks,
+        });
+      } finally {
+        await mcpManager?.closeAll();
+      }
+    },
   };
 }

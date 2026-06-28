@@ -4,6 +4,7 @@
     "noEmit": true,
     "paths": {
       "@larb/governors": ["./packages/governors/src/index.ts"],
+      "@larb/mcp": ["./packages/mcp/src/index.ts"],
       "@larb/providers": ["./packages/providers/src/index.ts"],
       "@larb/sandbox": ["./packages/sandbox/src/index.ts"],
       "@larb/context": ["./packages/context/src/index.ts"],

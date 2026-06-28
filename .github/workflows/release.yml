@@ -1,0 +1,50 @@
+name: Release
+
+# Publish @larb/cli to npm when a version tag is pushed (e.g. v0.1.0-alpha.1).
+# Requires an NPM_TOKEN secret with publish rights. Provenance is attached via
+# the OIDC id-token (npm >= 9.5, public package).
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build CLI bundle
+        run: pnpm build
+
+      # Publish the single shippable package. prepublishOnly rebuilds the bundle;
+      # --no-git-checks avoids pnpm's branch/lockfile gate in CI.
+      - name: Publish @larb/cli
+        working-directory: packages/cli
+        run: pnpm publish --no-git-checks --provenance --access public --tag alpha
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

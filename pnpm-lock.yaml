@@ -51,6 +51,9 @@ importers:
       '@larb/governors':
         specifier: workspace:*
         version: link:../governors
+      '@larb/mcp':
+        specifier: workspace:*
+        version: link:../mcp
       '@larb/providers':
         specifier: workspace:*
         version: link:../providers
@@ -81,6 +84,9 @@ importers:
       '@larb/governors':
         specifier: workspace:*
         version: link:../governors
+      '@larb/mcp':
+        specifier: workspace:*
+        version: link:../mcp
       '@larb/providers':
         specifier: workspace:*
         version: link:../providers
@@ -99,6 +105,12 @@ importers:
         version: 7.0.2
 
   packages/governors: {}
+
+  packages/mcp:
+    devDependencies:
+      '@larb/governors':
+        specifier: workspace:*
+        version: link:../governors
 
   packages/providers:
     dependencies:
