@@ -22,8 +22,10 @@ timeline
     section Depth (shipped)
       Phase 6 : durable run state · container egress allow-list · true streaming · bench harness
       Phase 7 : prompt caching · isolated worktrees · secret broker · SWE-bench loader
+    section Tooling parity (shipped)
+      MCP & instructions : MCP servers (gated) · AGENTS.md · live runs (local + cloud)
     section Toward 1.0 (planned)
-      Release readiness : build + global install · CI · NOTICE/TRADEMARK · live run
+      Release readiness : npm publish · CI · NOTICE/TRADEMARK
       Trust & scale : microVM backend · community skill registry · VS Code extension
 ```
 
@@ -42,17 +44,23 @@ timeline
 | สถานะรันถาวร | ✅ | `larb runs` / `larb resume` |
 | สตรีมจริง (SSE / NDJSON) | ✅ | OpenAI + Ollama แบบเพิ่มทีละส่วน Anthropic แคช |
 | สกิลเซ็น + แมนิเฟสต์ | ✅ | ติดตั้งจากไดเรกทอรี/tarball/git ติดตั้ง ≠ เชื่อถือ |
+| MCP (Model Context Protocol) | ✅ | เซิร์ฟเวอร์ stdio เป็นเครื่องมือที่ควบคุมด้วยสิทธิ์ `larb mcp` / `larb mcp probe` |
+| คำแนะนำของโปรเจกต์ (AGENTS.md) | ✅ | โหลด `AGENTS.md` / `.larb/AGENTS.md` เป็นบริบทเชิงแนะนำ |
 | ตัวรับฝากความลับ | ✅ | ขอบเขตเดียวที่ปิดบังคีย์จากสภาพแวดล้อม |
 | เครื่องมือเบนช์มาร์ก | ✅ | อัตราการแก้สำเร็จ + ต้นทุน/งาน แยกด้วย worktree |
 | เครื่องมือ SWE-bench | 🟡 | โหลดเดอร์ + พรีมิทีฟการให้คะแนน รันเต็มต้องใช้รีโพชุดข้อมูล |
+| การรันโมเดลแบบสด (ในเครื่อง + คลาวด์) | ✅ | ยืนยันจบสมบูรณ์กับ Ollama (ในเครื่อง) และผู้ให้บริการที่เข้ากันได้กับ OpenAI |
 | CLI · TUI · editor bridge | ✅ | สตรีม ตรวจ diff อนุมัติ มิเตอร์ค่าใช้จ่ายสด |
 
 ## สิ่งที่จะทำต่อ (มุ่งสู่ 1.0)
 
-### ความพร้อมปล่อยรุ่น 🔜
-- **การรันจบสมบูรณ์แบบสด** กับผู้ให้บริการจริง (ด่านสำคัญที่สุด)
-- **การยืนยันแซนด์บ็อกซ์คอนเทนเนอร์แบบสด** บนเครื่องที่มีรันไทม์
-- เผยแพร่ `npm i -g @larb/cli`, CI, changelog และไฟล์ทางกฎหมาย
+### ความพร้อมปล่อยรุ่น
+- ✅ **การรันจบสมบูรณ์แบบสด** — ยืนยันแล้วกับ Ollama (ในเครื่อง) และผู้ให้บริการ
+  คลาวด์ที่เข้ากันได้กับ OpenAI
+- ✅ **แพ็กเกจพร้อมเผยแพร่** — บันเดิล CLI ไฟล์เดียว เมทาดาทาแพ็กเกจ และเวิร์กโฟลว์
+  ปล่อยรุ่นที่ทริกเกอร์ด้วยแท็ก
+- 🔜 **เผยแพร่อัลฟ่าครั้งแรกบน npm** แล้วเลื่อนเป็น `latest` หลังได้ฟีดแบ็ก
+- 🟡 **การยืนยันแซนด์บ็อกซ์คอนเทนเนอร์แบบสด** บนเครื่องที่มี docker/podman
 
 ### ความเชื่อถือและสเกล 🔜
 - **แบ็กเอนด์แซนด์บ็อกซ์ไมโครวีเอ็ม** ที่รอยต่อเดิม — บล็อกการออกระดับซ็อกเก็ตดิบ

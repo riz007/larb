@@ -17,8 +17,9 @@ flowchart TD
 
     ORCH --> MP["Model Provider<br/>Abstraction"]
     ORCH --> TL["Tool / Capability<br/>Layer + exec sandbox"]
-    ORCH --> CE["Context Engine<br/>repo map · memory · compaction"]
+    ORCH --> CE["Context Engine<br/>repo map · memory · AGENTS.md · compaction"]
     ORCH --> SK["Skill / Plugin<br/>Registry (signed)"]
+    ORCH --> MC["MCP servers<br/>external tools (gated)"]
 
     subgraph GOV["Cross-cutting governors"]
       direction LR
@@ -32,6 +33,7 @@ flowchart TD
     TL -.enforced by.-> GOV
     CE -.enforced by.-> GOV
     SK -.enforced by.-> GOV
+    MC -.enforced by.-> GOV
 
     MP --> PR{{"Anthropic · OpenAI ·<br/>Ollama · 8 more"}}
     TL --> SB[["Sandbox backend<br/>container / spawn"]]
@@ -154,6 +156,9 @@ flowchart TD
 
 - **แผนผังรีโพ** — ดัชนีโครงสร้างแบบเพิ่มทีละส่วนสำหรับการให้เหตุผลข้ามไฟล์
 - **หน่วยความจำ** — มาร์กดาวน์บนดิสก์ที่ตรวจสอบได้ ขอบเขตต่อโปรเจกต์
+- **คำแนะนำของโปรเจกต์ (`AGENTS.md`)** — ไฟล์ `AGENTS.md` และ `.larb/AGENTS.md` ถูก
+  โหลดเข้าเป็นบริบทเชิงแนะนำใน system prompt (จำกัดขนาด) ใช้ชี้แนะแนวทางการทำงานของ
+  เอเจนต์ได้ แต่ไม่สามารถลบล้างหลักความปลอดภัยหรือเอนจินสิทธิ์ได้
 - **การบีบอัด** — สรุปเชิงรุกด้วยโมเดลเวิร์กเกอร์ราคาถูก เพื่อให้เซสชันยาว ๆ ยัง
   ประหยัดและไม่ล้นหน้าต่างบริบท
 - **ตัวป้องกันการแทรกคำสั่ง** — เอาต์พุตจากเครื่องมือ/รีโพที่ไม่น่าเชื่อถือจะถูก
@@ -175,6 +180,31 @@ flowchart LR
 โฮสต์เครือข่าย, การรันคำสั่ง, ความลับ) ตัวรับฝากบังคับใช้แมนิเฟสต์นั้นทั้งกับสิ่งที่
 ประกาศและกับเอนจินสิทธิ์ — **ติดตั้ง ≠ เชื่อถือ**
 
+## MCP (เครื่องมือภายนอก)
+
+Larb รองรับ **Model Context Protocol** คุณจึงเชื่อมต่อเซิร์ฟเวอร์เครื่องมือภายนอก
+(ระบบไฟล์, GitHub, ฐานข้อมูล หรือของคุณเอง) เข้ามาได้ และเอเจนต์จะใช้งานมันเหมือน
+เครื่องมือในตัว
+
+```mermaid
+flowchart LR
+    CFG["~/.larb/config.toml<br/>[[mcp]] (trusted-global only)"] --> MGR[MCP manager]
+    MGR -->|stdio JSON-RPC| SRV[["MCP server<br/>(spawned in a run)"]]
+    SRV --> TOOLS["tools/list → tools/call"]
+    TOOLS --> GATE{Permission engine<br/>mcp capability}
+    GATE -->|allow · logged| ORCH2[Orchestrator loop]
+    GATE -->|deny| X([Denied])
+```
+
+- เครื่องมือจากระยะไกลแต่ละตัวปรากฏเป็น `mcp__<server>__<tool>` และ **ผ่านการ
+  ตรวจสิทธิ์** ด้วยความสามารถ `mcp` ที่จำกัดขอบเขตตามเซิร์ฟเวอร์ ทุกการเรียกถูก
+  บันทึก และเอาต์พุตผ่านตัวป้องกันการแทรกคำสั่ง
+- คอนฟิก `[[mcp]]` อยู่ใน **คอนฟิกระดับโกลบอลที่เชื่อถือเท่านั้น** — เพราะเซิร์ฟเวอร์
+  stdio สั่งรันคำสั่งได้ รีโพที่ไม่น่าเชื่อถือจึงนิยามมันไม่ได้ เซิร์ฟเวอร์จะเชื่อมต่อ
+  **เฉพาะระหว่างการรัน** (หลังตัดสินใจเชื่อถือ) และถูกปิดเมื่อจบ
+- ดูเซิร์ฟเวอร์ที่ตั้งค่าไว้ด้วย `larb mcp` หรือเชื่อมต่อเพื่อแสดงเครื่องมือด้วย
+  `larb mcp probe`
+
 ## โครงสร้างที่เก็บโค้ด
 
 ```
@@ -182,9 +212,10 @@ packages/
   governors/   trust · permission · cost · audit · secret broker
   providers/   model adapters · routing · conformance suite
   sandbox/     pluggable execution isolation · egress proxy
-  context/     repo map · markdown memory · compaction
+  context/     repo map · markdown memory · AGENTS.md · compaction
   core/        orchestrator loop · tools · run state · bench · worktrees
   skills/      skill + plugin runtime · manifest · signing · broker
+  mcp/         Model Context Protocol client · stdio transport · tool broker
   cli/         CLI · Ink TUI · editor bridge
 skills-sdk/    TypeScript SDK สำหรับสกิลของชุมชน
 ```
