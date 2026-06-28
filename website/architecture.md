@@ -18,8 +18,9 @@ flowchart TD
 
     ORCH --> MP["Model Provider<br/>Abstraction"]
     ORCH --> TL["Tool / Capability<br/>Layer + exec sandbox"]
-    ORCH --> CE["Context Engine<br/>repo map · memory · compaction"]
+    ORCH --> CE["Context Engine<br/>repo map · memory · AGENTS.md · compaction"]
     ORCH --> SK["Skill / Plugin<br/>Registry (signed)"]
+    ORCH --> MC["MCP servers<br/>external tools (gated)"]
 
     subgraph GOV["Cross-cutting governors"]
       direction LR
@@ -33,6 +34,7 @@ flowchart TD
     TL -.enforced by.-> GOV
     CE -.enforced by.-> GOV
     SK -.enforced by.-> GOV
+    MC -.enforced by.-> GOV
 
     MP --> PR{{"Anthropic · OpenAI ·<br/>Ollama · 8 more"}}
     TL --> SB[["Sandbox backend<br/>container / spawn"]]
@@ -155,6 +157,10 @@ isolation primitive; a microVM backend can slot in behind the same seam later.
 
 - **Repo map** — an incremental structural index for cross-file reasoning.
 - **Memory** — local, inspectable markdown on disk, per-project scope.
+- **Project instructions (`AGENTS.md`)** — `AGENTS.md` and `.larb/AGENTS.md` are
+  loaded as advisory system-prompt context (size-bounded). They shape how the
+  agent approaches the task but can never override the safety principles or the
+  permission engine.
 - **Compaction** — proactive summarization with the cheap worker model so long
   sessions stay cheap and don't overflow the context window.
 - **Injection guard** — untrusted tool/repo output is screened for injected
@@ -176,6 +182,31 @@ Every skill ships a **manifest** declaring exactly the capabilities it needs (fs
 paths, network hosts, exec, secrets). The broker enforces that manifest against
 both the declaration and the permission engine — **install ≠ trust**.
 
+## MCP (external tools)
+
+Larb speaks the **Model Context Protocol**, so you can plug in external tool
+servers (filesystem, GitHub, databases, or your own) and the agent uses them
+like any built-in tool.
+
+```mermaid
+flowchart LR
+    CFG["~/.larb/config.toml<br/>[[mcp]] (trusted-global only)"] --> MGR[MCP manager]
+    MGR -->|stdio JSON-RPC| SRV[["MCP server<br/>(spawned in a run)"]]
+    SRV --> TOOLS["tools/list → tools/call"]
+    TOOLS --> GATE{Permission engine<br/>mcp capability}
+    GATE -->|allow · logged| ORCH2[Orchestrator loop]
+    GATE -->|deny| X([Denied])
+```
+
+- Each remote tool is surfaced as `mcp__<server>__<tool>` and is **permission-
+  gated** by an `mcp` capability scoped to the server; every call is audited and
+  its output passes through the injection guard.
+- `[[mcp]]` config is **trusted-global-only** — a stdio server spawns a command,
+  so an untrusted repo can never define one. Servers connect only **inside a
+  run** (after a trust decision) and are torn down when it ends.
+- Inspect configured servers with `larb mcp`, or connect and list their tools
+  with `larb mcp probe`.
+
 ## Repository layout
 
 ```
@@ -183,9 +214,10 @@ packages/
   governors/   trust · permission · cost · audit · secret broker
   providers/   model adapters · routing · conformance suite
   sandbox/     pluggable execution isolation · egress proxy
-  context/     repo map · markdown memory · compaction
+  context/     repo map · markdown memory · AGENTS.md · compaction
   core/        orchestrator loop · tools · run state · bench · worktrees
   skills/      skill + plugin runtime · manifest · signing · broker
+  mcp/         Model Context Protocol client · stdio transport · tool broker
   cli/         CLI · Ink TUI · editor bridge
 skills-sdk/    TypeScript SDK for community skills
 ```

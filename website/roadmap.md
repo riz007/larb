@@ -22,8 +22,10 @@ timeline
     section Depth (shipped)
       Phase 6 : durable run state · container egress allow-list · true streaming · bench harness
       Phase 7 : prompt caching · isolated worktrees · secret broker · SWE-bench loader
+    section Tooling parity (shipped)
+      MCP & instructions : MCP servers (gated) · AGENTS.md · live runs (local + cloud)
     section Toward 1.0 (planned)
-      Release readiness : build + global install · CI · NOTICE/TRADEMARK · live run
+      Release readiness : npm publish · CI · NOTICE/TRADEMARK
       Trust & scale : microVM backend · community skill registry · VS Code extension
 ```
 
@@ -42,17 +44,23 @@ timeline
 | Durable run state | ✅ | `larb runs` / `larb resume` |
 | True streaming (SSE / NDJSON) | ✅ | OpenAI + Ollama incremental; Anthropic caching |
 | Signed, manifested skills | ✅ | Install from dir / tarball / git; install ≠ trust |
+| MCP (Model Context Protocol) | ✅ | stdio servers as permission-gated tools; `larb mcp` / `larb mcp probe` |
+| Project instructions (AGENTS.md) | ✅ | `AGENTS.md` / `.larb/AGENTS.md` loaded as advisory context |
 | Secret broker | ✅ | Single redacting env boundary |
 | Benchmark harness | ✅ | Resolution rate + cost/task, worktree isolation |
 | SWE-bench harness | 🟡 | Loader + grading primitives; full graded runs need dataset repos |
+| Live model runs (local + cloud) | ✅ | Verified end-to-end against Ollama (local) and an OpenAI-compatible provider |
 | CLI · TUI · editor bridge | ✅ | Streaming, diff review, approvals, live cost meter |
 
 ## What's next (toward 1.0)
 
-### Release readiness 🔜
-- **A confirmed end-to-end live run** against a real provider (the #1 gate).
-- **Live container-sandbox verification** on a host with a runtime.
-- Published `npm i -g @larb/cli`, CI, changelog, and legal files.
+### Release readiness
+- ✅ **Confirmed end-to-end live runs** — validated against Ollama (local) and an
+  OpenAI-compatible cloud provider.
+- ✅ **Publishable package** — single-file CLI bundle, package metadata, and a
+  tag-driven release workflow.
+- 🔜 First **alpha publish to npm**, then promote to `latest` after feedback.
+- 🟡 **Live container-sandbox verification** on a host with docker/podman.
 
 ### Trust & scale 🔜
 - **MicroVM sandbox backend** behind the existing seam — airtight raw-socket

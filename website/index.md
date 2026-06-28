@@ -34,7 +34,7 @@ features:
     details: Live token and dollar accounting with hard limits that halt the agent before overspend — never a surprise bill. Cache-aware pricing and cheap-worker routing keep long runs inexpensive.
   - icon: 🧩
     title: Extensible, but governed
-    details: Community skills with signing, a declared-permission manifest, and tiered trust. Install ≠ trust — unsigned skills run in the tightest sandbox.
+    details: Community skills with signing, a declared-permission manifest, and tiered trust — plus MCP servers plugged in as permission-gated tools. Install ≠ trust — unsigned skills run in the tightest sandbox.
   - icon: 🔎
     title: Open and auditable end-to-end
     details: The client is not a black box. An append-only audit log records every model call, tool call, and permission grant. Apache-2.0.
