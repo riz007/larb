@@ -10,7 +10,7 @@ import { runsCommand } from "./commands/runs.js";
 import { benchCommand } from "./commands/bench.js";
 import { RunStateStore } from "@larb/core";
 
-const VERSION = "0.1.0-alpha.1";
+const VERSION = "0.1.0-alpha.2";
 
 const HELP = `Larb — open-source, model-agnostic, security-first coding agent
 
@@ -33,6 +33,8 @@ Usage:
 Larb makes ZERO network calls and reads ZERO executable config before you make
 a trust decision for a directory. Larb is model-agnostic: pick any provider with
 'kind' in ~/.larb/config.toml (run 'larb providers') and set its API key env var.
+
+Docs: https://riz007.github.io/larb/  (new here? read getting-started + security first)
 `;
 
 function main(): void {
@@ -84,6 +86,7 @@ function main(): void {
     case "--version":
     case "-v":
       console.log(`larb ${VERSION}`);
+      console.log("docs: https://riz007.github.io/larb/");
       return;
     case undefined:
     case "help":

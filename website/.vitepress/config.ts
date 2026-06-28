@@ -35,6 +35,7 @@ export default withMermaid(
         themeConfig: {
           nav: [
             { text: "Home", link: "/" },
+            { text: "Getting Started", link: "/getting-started" },
             { text: "Architecture", link: "/architecture" },
             { text: "Comparison", link: "/comparison" },
             { text: "Roadmap", link: "/roadmap" },
@@ -45,6 +46,7 @@ export default withMermaid(
               text: "Larb",
               items: [
                 { text: "Overview", link: "/" },
+                { text: "Getting started", link: "/getting-started" },
                 { text: "Architecture", link: "/architecture" },
                 { text: "Comparison with other agents", link: "/comparison" },
                 { text: "Roadmap", link: "/roadmap" },
@@ -68,6 +70,7 @@ export default withMermaid(
         themeConfig: {
           nav: [
             { text: "หน้าแรก", link: "/th/" },
+            { text: "เริ่มต้นใช้งาน", link: "/th/getting-started" },
             { text: "สถาปัตยกรรม", link: "/th/architecture" },
             { text: "เปรียบเทียบ", link: "/th/comparison" },
             { text: "โรดแมป", link: "/th/roadmap" },
@@ -78,6 +81,7 @@ export default withMermaid(
               text: "Larb",
               items: [
                 { text: "ภาพรวม", link: "/th/" },
+                { text: "เริ่มต้นใช้งาน", link: "/th/getting-started" },
                 { text: "สถาปัตยกรรม", link: "/th/architecture" },
                 { text: "เปรียบเทียบกับเอเจนต์อื่น", link: "/th/comparison" },
                 { text: "โรดแมป", link: "/th/roadmap" },

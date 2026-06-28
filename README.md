@@ -4,6 +4,12 @@
 
 > Open-source, model-agnostic, security-first autonomous coding agent.
 
+### 📖 Documentation → **https://riz007.github.io/larb/**
+
+New here? Start with **[Getting started](https://riz007.github.io/larb/getting-started)**
+and the **[Security model](https://riz007.github.io/larb/security)** before your
+first run — Larb runs autonomously and executes commands on your machine.
+
 Larb is a terminal-native autonomous engineer you can point at any model,
 extend with governed skills, and run without rate-limit cliffs or vendor
 lock-in — with a trust model that makes opening an untrusted repo safe by

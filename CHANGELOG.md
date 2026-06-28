@@ -6,6 +6,27 @@ All notable changes to Larb are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] — 2026-06-28
+
+### Added
+
+- **MCP (Model Context Protocol) support** — connect external tool servers via
+  `[[mcp]]` (trusted-global config only). Each remote tool is surfaced as a
+  permission-gated `mcp__<server>__<tool>` through the existing permission engine
+  and audit log. Inspect servers with `larb mcp` / `larb mcp probe`.
+- **`AGENTS.md` project instructions** — `AGENTS.md` and `.larb/AGENTS.md` are
+  loaded as size-bounded, advisory system-prompt context (they cannot override
+  the safety principles or the permission engine).
+- **Getting Started** documentation and a docs-first README.
+
+### Fixed
+
+- **Ollama tool calls emitted as JSON text** (bare, `<tool_call>`-tagged, or
+  fenced) are now recovered into structured tool calls — local models that don't
+  return `tool_calls` now work in the agent loop.
+- Install instructions use the `@alpha` dist-tag, since the package is published
+  under the `alpha` tag and the bare name would not resolve during the alpha.
+
 ## [0.1.0-alpha.1] — 2026-06-04
 
 First tagged alpha. **Pre-release software for early, BYO-key developers** — APIs,
@@ -54,5 +75,6 @@ unattended or production use. See "Known limitations" in the README.
 - SWE-bench grading ships as primitives + loader; full graded runs need the
   dataset repos and per-repo test commands (see `docs/swebench.md`).
 
-[Unreleased]: https://github.com/riz007/larb/compare/v0.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/riz007/larb/compare/v0.1.0-alpha.2...HEAD
+[0.1.0-alpha.2]: https://github.com/riz007/larb/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/riz007/larb/releases/tag/v0.1.0-alpha.1

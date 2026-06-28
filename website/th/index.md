@@ -10,11 +10,11 @@ hero:
     alt: Larb
   actions:
     - theme: brand
+      text: เริ่มต้นใช้งาน
+      link: /th/getting-started
+    - theme: alt
       text: สถาปัตยกรรม
       link: /th/architecture
-    - theme: alt
-      text: ทำไมต้อง Larb (เปรียบเทียบ)
-      link: /th/comparison
     - theme: alt
       text: GitHub
       link: https://github.com/riz007/larb
@@ -62,6 +62,8 @@ Claude Code, Codex CLI, Gemini CLI, DeepSeek, Aider และ OpenClaw อย่
 
 ### สำรวจต่อ
 
+- **[เริ่มต้นใช้งาน](/th/getting-started)** — ติดตั้ง ชี้ Larb ไปยังโมเดล การรันครั้งแรก
+  และแบบจำลองความปลอดภัยที่ควรเข้าใจก่อนนำไปพึ่งพา
 - **[สถาปัตยกรรม](/th/architecture)** — ลูปออร์เคสเตรเตอร์ การนามธรรมผู้ให้บริการ
   แซนด์บ็อกซ์ เอนจินบริบท สกิล และตัวควบคุมข้ามระบบ พร้อมไดอะแกรม
 - **[เปรียบเทียบ](/th/comparison)** — ภูมิทัศน์การแข่งขันและจุดที่ Larb ชนะ

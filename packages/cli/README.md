@@ -2,6 +2,16 @@
 
 > Open-source, model-agnostic, security-first autonomous coding agent — for your terminal.
 
+### 📖 Read the docs first → **https://riz007.github.io/larb/**
+
+Larb runs autonomously and executes commands on your machine. Please read the
+**[documentation](https://riz007.github.io/larb/)** — especially the
+[security model](https://riz007.github.io/larb/security) and
+[getting started](https://riz007.github.io/larb/getting-started) — **before your
+first run**.
+
+---
+
 Larb is a terminal-native autonomous engineer you can point at **any** model
 (Anthropic, OpenAI, DeepSeek, Gemini, Groq, Mistral, xAI, OpenRouter, Together,
 Perplexity, or a local **Ollama** model), extend with governed skills, and run
@@ -14,8 +24,10 @@ safe by default.
 
 ## Install
 
+Published under the `alpha` tag during the alpha — install with `@alpha`:
+
 ```bash
-npm i -g @larb/cli
+npm i -g @larb/cli@alpha
 larb version
 ```
 
@@ -54,8 +66,12 @@ kind = "ollama"   # local, no key, no spend — or anthropic / openai / deepseek
 
 ## Documentation
 
-Full docs, provider table, security/threat model, and roadmap:
-**https://github.com/riz007/larb**
+Full documentation — getting started, architecture, provider table, security &
+threat model, and roadmap — lives at:
+
+**📖 https://riz007.github.io/larb/**
+
+Source and issues: [github.com/riz007/larb](https://github.com/riz007/larb).
 
 ## License
 

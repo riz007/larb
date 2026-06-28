@@ -10,11 +10,11 @@ hero:
     alt: Larb
   actions:
     - theme: brand
+      text: Get started
+      link: /getting-started
+    - theme: alt
       text: Architecture
       link: /architecture
-    - theme: alt
-      text: Why Larb (comparison)
-      link: /comparison
     - theme: alt
       text: GitHub
       link: https://github.com/riz007/larb
@@ -62,6 +62,8 @@ OpenClaw.
 
 ### Explore
 
+- **[Getting started](/getting-started)** — install, point Larb at a model, your
+  first run, and the safety model to understand before you rely on it.
 - **[Architecture](/architecture)** — the orchestrator loop, provider
   abstraction, sandbox, context engine, skills, and cross-cutting governors,
   with diagrams.
