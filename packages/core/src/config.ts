@@ -17,6 +17,13 @@ export interface LarbConfig {
   policy: ProjectPolicy;
   /** Verification commands run after edits (lint/typecheck/build/test). */
   verify: string[];
+  /**
+   * Fast diagnostics commands (e.g. "tsc --noEmit") run after EVERY successful
+   * file mutation; failures are fed straight back to the model with the tool
+   * result, so errors are caught while they're one edit deep — not at the end
+   * of the run. Keep these fast; heavyweight suites belong in `verify`.
+   */
+  check: string[];
   maxIterations: number;
   /** Execution-isolation policy. Trusted (global) config only — see below. */
   sandbox: SandboxConfig;
@@ -33,6 +40,7 @@ export const DEFAULT_CONFIG: LarbConfig = {
   limits: DEFAULT_SPEND_LIMITS,
   policy: {},
   verify: [],
+  check: [],
   maxIterations: 30,
   sandbox: { backend: "auto", network: "none" },
   mcp: [],
@@ -71,6 +79,7 @@ function applyGlobal(config: LarbConfig, raw: Record<string, unknown> | undefine
   const policy = raw.policy as ProjectPolicy | undefined;
   if (policy) config.policy = policy;
   if (Array.isArray(raw.verify)) config.verify = raw.verify.map(String);
+  if (Array.isArray(raw.check)) config.check = raw.check.map(String);
   if (typeof raw.maxIterations === "number") config.maxIterations = raw.maxIterations;
 
   // Sandbox isolation policy is trusted-config-only: repo config can never
@@ -135,9 +144,10 @@ function applyProjectProposals(
       config.limits.perDay = Math.min(config.limits.perDay, limits.perDay);
   }
 
-  // Verification commands are proposals (still run inside the sandbox under exec
-  // permission), and iteration budget may be proposed.
+  // Verification/check commands are proposals (still run inside the sandbox
+  // under exec permission), and iteration budget may be proposed.
   if (Array.isArray(raw.verify)) config.verify = raw.verify.map(String);
+  if (Array.isArray(raw.check)) config.check = raw.check.map(String);
   if (typeof raw.maxIterations === "number") config.maxIterations = raw.maxIterations;
 
   // NOTE: policy.allow / policy.deny, the [sandbox] isolation policy, and [[mcp]]

@@ -41,6 +41,11 @@ export class ProjectMemory {
     writeFileSync(this.fileFor(name), content, "utf8");
   }
 
+  /** Absolute path a memory name maps to (for permission scoping / display). */
+  pathFor(name: string): string {
+    return this.fileFor(name);
+  }
+
   /** Concatenate memory for context injection, bounded in size. */
   load(): string {
     const parts: string[] = [];

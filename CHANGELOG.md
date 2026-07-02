@@ -6,6 +6,25 @@ All notable changes to Larb are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-alpha.3] — 2026-06-28
+
+### Added
+
+- **`edit_file` tool** — surgical in-place edits (exact old→new replacement,
+  occurrence-checked, ambiguity is a loud error). Token cost now scales with the
+  change, not the file, and half-remembered files can't be silently truncated.
+  `read_file` gains `offset`/`limit` for ranged reads of large files.
+- **`remember` tool** — the agent can save durable project notes (markdown under
+  `.larb/memory`, gated by `fs.write`) that are loaded into context in future
+  sessions, so long-running use compounds instead of rediscovering the project.
+- **Post-edit diagnostics (`check`)** — configure fast commands (e.g. a
+  typecheck) that run after every successful edit; failures are fed back to the
+  model in the same tool result, catching errors while they're one edit deep.
+- **Headless mode** — `larb run <task> --yes [--json]` (and `larb resume --yes`)
+  for CI and scripts: no prompts, progress on stderr, machine-readable result on
+  stdout. Requires prior explicit `larb trust --full`; sandbox, spend caps, and
+  deny-policy still apply in full.
+
 ## [0.1.0-alpha.2] — 2026-06-28
 
 ### Added
@@ -75,6 +94,7 @@ unattended or production use. See "Known limitations" in the README.
 - SWE-bench grading ships as primitives + loader; full graded runs need the
   dataset repos and per-repo test commands (see `docs/swebench.md`).
 
-[Unreleased]: https://github.com/riz007/larb/compare/v0.1.0-alpha.2...HEAD
+[Unreleased]: https://github.com/riz007/larb/compare/v0.1.0-alpha.3...HEAD
+[0.1.0-alpha.3]: https://github.com/riz007/larb/compare/v0.1.0-alpha.2...v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/riz007/larb/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/riz007/larb/releases/tag/v0.1.0-alpha.1

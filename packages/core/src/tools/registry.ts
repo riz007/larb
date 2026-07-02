@@ -1,10 +1,17 @@
 import type { ToolDefinition } from "@larb/providers";
 import type { Tool } from "./types.js";
-import { readFileTool, writeFileTool, listFilesTool, searchTextTool } from "./fs.js";
+import {
+  readFileTool,
+  writeFileTool,
+  editFileTool,
+  listFilesTool,
+  searchTextTool,
+} from "./fs.js";
 import { runCommandTool } from "./exec.js";
 import { gitTool } from "./git.js";
 import { httpFetchTool } from "./http.js";
 import { delegateTool } from "./delegate.js";
+import { rememberTool } from "./memory.js";
 
 /** Holds the available capability-tools and exposes them as provider tool defs. */
 export class ToolRegistry {
@@ -42,11 +49,13 @@ export function fullTools(): Tool[] {
   return [
     readFileTool,
     writeFileTool,
+    editFileTool,
     listFilesTool,
     searchTextTool,
     runCommandTool,
     gitTool,
     httpFetchTool,
+    rememberTool,
   ];
 }
 
@@ -58,10 +67,12 @@ export function orchestratorTools(): Tool[] {
 export {
   readFileTool,
   writeFileTool,
+  editFileTool,
   listFilesTool,
   searchTextTool,
   runCommandTool,
   gitTool,
   httpFetchTool,
   delegateTool,
+  rememberTool,
 };

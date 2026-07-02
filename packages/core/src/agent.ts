@@ -60,6 +60,9 @@ export interface RunResult {
 
 const MAX_VERIFY_ATTEMPTS = 3;
 
+/** Tools that mutate project files (drive editsMade + post-edit checks). */
+const MUTATING_TOOLS = new Set(["write_file", "edit_file"]);
+
 /**
  * Agent orchestrator loop: plan → act → observe → verify → repeat.
  * Single-agent mode for v1; the same shape generalizes to multi-agent later.
@@ -183,6 +186,7 @@ export class Orchestrator {
         let content: string;
         let ok: boolean;
         let summary: string;
+        let mutated = false;
         if (!tool) {
           ok = false;
           content = `Unknown tool: ${call.name}`;
@@ -193,7 +197,10 @@ export class Orchestrator {
             ok = r.ok;
             content = r.content;
             summary = r.summary;
-            if (call.name === "write_file" && r.ok) editsMade = true;
+            if (MUTATING_TOOLS.has(call.name) && r.ok) {
+              editsMade = true;
+              mutated = true;
+            }
           } catch (err) {
             ok = false;
             content =
@@ -209,10 +216,18 @@ export class Orchestrator {
         // re-enters the model context.
         const guarded = guardUntrusted(content);
         if (guarded.flagged) callbacks?.onNote?.(`Flagged possible prompt injection in ${call.name} output.`);
+        // Fast diagnostics right after a mutation: failures reach the model in
+        // the SAME tool result, while the error is one edit deep — instead of
+        // surfacing at end-of-run verification.
+        let resultText = guarded.text;
+        if (mutated && config.check.length > 0) {
+          const report = await this.runChecks(opts);
+          if (report) resultText += `\n\nDiagnostics after this edit (fix before continuing):\n${report}`;
+        }
         toolResults.push({
           type: "tool_result",
           toolUseId: call.id,
-          content: guarded.text,
+          content: resultText,
           isError: !ok,
         });
       }
@@ -242,6 +257,37 @@ export class Orchestrator {
     }
     if (!final) throw new Error("model stream ended without a final result");
     return final;
+  }
+
+  /**
+   * Run the fast `check` diagnostics through the sandbox (same permission gate
+   * as verification). Returns a failure report, or null when everything passes.
+   */
+  private async runChecks(opts: RunOptions): Promise<string | null> {
+    const reports: string[] = [];
+    for (const command of opts.config.check) {
+      try {
+        await opts.toolContext.permission.require({
+          capability: "exec",
+          path: opts.toolContext.projectRoot,
+          command,
+          reason: `post-edit check: ${command}`,
+        });
+        const res = await opts.toolContext.sandbox.run(command);
+        const ok = res.code === 0 && !res.timedOut;
+        if (!ok) {
+          opts.callbacks?.onNote?.(`check ✗ ${command}`);
+          reports.push(
+            `$ ${command}\n[exit ${res.timedOut ? "timeout" : res.code}]\n` +
+              [res.stdout, res.stderr].filter(Boolean).join("\n").slice(0, 3000),
+          );
+        }
+      } catch (err) {
+        // A denied/failed check must not kill the run — checks are advisory.
+        opts.callbacks?.onNote?.(`check skipped (${(err as Error).message})`);
+      }
+    }
+    return reports.length ? reports.join("\n\n") : null;
   }
 
   /** Run the configured verification commands through the sandbox. */
@@ -297,8 +343,18 @@ function buildSystemPrompt(opts: RunOptions): string {
     "- Verify, don't assume: after edits, expect the verification loop to run " +
       "lint/build/test; do not claim success until checks pass.",
     "- Be surgical: prefer minimal, well-scoped diffs that match surrounding code.",
+    opts.registry.get("edit_file")
+      ? "- Edit in place: use `edit_file` (exact old→new replacement) to modify " +
+        "existing files; reserve `write_file` for new files or full rewrites. " +
+        "Read the relevant part of a file before editing it."
+      : "",
     "- Be honest: if you cannot complete the task or a check fails, say so plainly.",
     "- Respect permissions: if a tool is denied, adapt rather than retry blindly.",
+    opts.registry.get("remember")
+      ? "- Build memory: when you discover a non-obvious, durable fact about this " +
+        "project (a build quirk, a convention, a decision), save it with `remember` " +
+        "so future sessions start smarter. Never store secrets in memory."
+      : "",
     opts.registry.get("delegate")
       ? "- Delegate wisely: for large or parallelizable subtasks, call `delegate` " +
         "with a complete, self-contained instruction to hand work to a cheaper " +

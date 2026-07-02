@@ -48,6 +48,12 @@ perDay = 25.0      # USD — hard stop per calendar day
 # permission. A `run` is not "done" until these pass.
 verify = ["pnpm -s typecheck", "pnpm -s test"]
 
+# Fast diagnostics run after EVERY successful file edit; failures are fed
+# straight back to the model with the tool result, so errors are fixed while
+# they're one edit deep. Keep these FAST (a typecheck, a linter) — heavyweight
+# suites belong in `verify` above.
+# check = ["pnpm -s typecheck"]
+
 maxIterations = 30
 
 # Execution isolation. GLOBAL-CONFIG-ONLY — repo config can never weaken this.

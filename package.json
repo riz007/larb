@@ -1,6 +1,6 @@
 {
   "name": "larb-monorepo",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "private": true,
   "description": "Larb — open-source, model-agnostic, security-first autonomous coding agent",
   "keywords": [

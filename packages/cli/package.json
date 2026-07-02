@@ -1,6 +1,6 @@
 {
   "name": "@larb/cli",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "description": "Larb CLI + TUI — open-source, model-agnostic, security-first autonomous coding agent",
   "keywords": [
     "coding-agent",
